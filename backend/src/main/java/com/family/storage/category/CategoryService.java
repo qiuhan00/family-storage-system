@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * 分类业务：列表、增改查删。删除前校验分类下仍有物品则拒绝
- * （spec §4 关联约束、§5.3 DELETE 400）。
+ * （spec §4 关联约束、§5.3 DELETE 400）；新建/改名时重名校验
+ * （400 CATEGORY_NAME_TAKEN，R7 采纳：避免 DB 唯一约束落到 500）。
  */
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class CategoryService {
     }
 
     public Long create(CategoryRequest req) {
+        ensureNameNotTaken(req.name(), null);
         Category c = new Category();
         c.setName(req.name());
         c.setSortOrder(req.sortOrderOrDefault());
@@ -36,6 +38,7 @@ public class CategoryService {
 
     public Category update(Long id, CategoryRequest req) {
         Category c = find(id);
+        ensureNameNotTaken(req.name(), id);
         c.setName(req.name());
         c.setSortOrder(req.sortOrderOrDefault());
         return categoryRepository.save(c);
@@ -52,5 +55,13 @@ public class CategoryService {
     private Category find(Long id) {
         return categoryRepository.findById(id).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, "CATEGORY_NOT_FOUND", "分类不存在"));
+    }
+
+    private void ensureNameNotTaken(String name, Long excludeId) {
+        categoryRepository.findByName(name).ifPresent(existing -> {
+            if (excludeId == null || !existing.getId().equals(excludeId)) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "CATEGORY_NAME_TAKEN", "分类名已存在");
+            }
+        });
     }
 }
