@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+target/
+
+# Build output
+dist/
+
+# Environment / secrets
+.env
+
+# Uploaded files (local dev)
+backend/uploads/
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# OpenCode SDD scratch
+.superpowers/
+
+# Git worktrees (isolation dirs)
+.worktrees/
