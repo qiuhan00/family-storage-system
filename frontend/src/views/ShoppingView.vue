@@ -275,7 +275,7 @@ onMounted(async () => {
               checked-color="#1989fa"
               :disabled="row.status === 'CANCELLED'"
               aria-label="标记已购"
-              @change="onToggle(row)"
+              @update:model-value="() => onToggle(row)"
             />
             <div class="shop-row__main" @click="openEdit(row)">
               <div

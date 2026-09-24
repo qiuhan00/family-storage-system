@@ -83,7 +83,9 @@ function beforeRead(file: File | File[]): boolean | undefined {
     showToast('仅支持 jpg/jpeg/png/webp 图片');
     return false;
   }
-  return undefined;
+  // 注意：vant Uploader 将返回值按布尔判定，undefined 会中止上传（视为拒绝），
+  // 合法文件必须返回 true 才会继续进入 max-size 校验与上传流程。
+  return true;
 }
 
 function onOversize() {

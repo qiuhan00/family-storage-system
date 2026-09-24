@@ -47,7 +47,7 @@ function goBack() {
     </main>
 
     <van-tabbar route fixed placeholder active-color="#1989fa">
-      <van-tabbar-item replace to="/" icon="wap-home-o">首页</van-tabbar-item>
+      <van-tabbar-item replace :to="{ name: 'home' }" icon="wap-home-o">首页</van-tabbar-item>
       <van-tabbar-item replace to="/items" icon="apps-o">物品</van-tabbar-item>
       <van-tabbar-item replace to="/shopping" icon="cart-o">购物</van-tabbar-item>
       <van-tabbar-item replace to="/profile" icon="user-o">我的</van-tabbar-item>

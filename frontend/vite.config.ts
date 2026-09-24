@@ -11,6 +11,7 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
-    proxy: { '/api': 'http://localhost:8080' },
+    // dev 代理到后端 8080：/api 接口 + /uploads 静态上传文件（生产由 nginx/后端 WebConfig 兜底）
+    proxy: { '/api': 'http://localhost:8080', '/uploads': 'http://localhost:8080' },
   },
 });
