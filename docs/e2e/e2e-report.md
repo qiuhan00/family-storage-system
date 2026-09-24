@@ -95,3 +95,51 @@
 - 证据截图：`docs/e2e/evidence-2026-09-24-2300/step-*.png`（46 张）
 - 视频 / trace / HTML 报告：`docs/e2e/evidence-2026-09-24-2300/{video.webm, trace.zip, html-report}`
 - 脚本与配置：`docs/e2e/scripts/`
+
+---
+
+# 终轮回归（code-review 防御上线后 · Task 17 收尾 · HEAD=11c7bc9）
+
+- 被测 URL：`http://localhost:5173/`（前端 dev），后端 `http://localhost:8080`（`/uploads` 静态代理）
+- 浏览器 / 视口：Chrome（chromium channel chrome）/ 1280×720 / headless
+- 执行时间：2026-09-25（最终回归证据运行；隔离库 `family_storage_e2e` 已在上一轮回归中初始化为真实运行态）
+- 环境：worktree `family-storage-system`，MySQL 5.7 隔离库 `family_storage_e2e`（utf8mb4_unicode_ci，Flyway 当前版本）；`DB_PASSWORD` 走 User 级环境变量，未落盘
+- 脚本：`docs/e2e/scripts/family-storage.spec.js`（全量 94 步回归）+ `docs/e2e/scripts/family-storage-defenses.spec.js`（本次新增：防御分支专项）
+- 证据目录：
+  - 全量回归（既有）：`docs/e2e/evidence-2026-09-25-FINAL-regress/`
+  - 防御分支（本次）：`docs/e2e/evidence-2026-09-25-FINAL-defenses/`（14 张步骤截图）
+
+## 结论
+
+**PASS（2/2：全量回归 + 防御分支专项均通过）**。code-review 四类上线前防御（成员停用 401 登出、LAST_ADMIN 保护、登录 429 限流、图片魔数校验）均在生产代码上验证符合预期，且未破坏原有主流程；未发现新的前端缺陷。
+
+## 防御分支步骤表（PASS）
+
+| # | 场景 | 期望 | 证据 |
+|---|------|------|------|
+| D1 | 预置成员 API | `member_live`（停用 401 分支）/ `lockprobe*`（429 分支）带已知密码创建/确保启用 | dstep-01-admin-login-ready.png |
+| D2 | 成员正常登录 | 登录成功进入首页（停用前） | dstep-02-member-live-logged-in.png |
+| D3 | ADMIN 在 /users 停用其他成员 | 开关操作成功、状态持久化 | dstep-03-admin-disabled-member.png |
+| D4 | 被停用成员点「物品」Tab | GET /api/items → 401 USER_DISABLED → 前端拦截器清 token 并硬跳 `/login`，`fs_token` 为 null | dstep-04-member-401-logout-redirect.png |
+| D5 | ADMIN 尝试在 /users 停用自己 | 前端 ADMIN 开关禁用（文案「不能停用管理员账户」），不发请求 | dstep-05-admin-self-switch-blocked.png |
+| D6 | 直接 PATCH 停用最后一个启用 ADMIN | 后端 400 LAST_ADMIN「系统需保留至少一名启用状态的管理员…」，页面无崩溃 | dstep-06-frontend-alive-after-last-admin.png |
+| D7 | 登录连错 5 次 | 均为 401，未提前触发锁定 | dstep-07-login-5-fails.png |
+| D8 | 第 6 次登录 | 429 TOO_MANY_ATTEMPTS「尝试次数过多，请 5 分钟后再试」；仍停留 /login、按钮无 loading（不卡死）；其他用户（admin）不受影响可登录 | dstep-08-login-429-toast.png |
+| D9 | 假魔数上传（evil.png 实为 HTML） | 扩展名/类型通过客户端校验，后端魔数校验拒绝 → 400 INVALID_FILE_TYPE「文件内容与声明图片类型不符（魔数校验失败）」 | dstep-09-fake-magic-rejected.png |
+| D10 | 真实 JPEG（FF D8 FF）上传 | 缩略图回显且 `naturalWidth>0`（真实图片字节） | dstep-10-jpeg-upload-thumbnail.png |
+| D11 | 详情页照片回显 | 详情图经 `/uploads` 代理可加载（`naturalWidth>0`） | dstep-11-jpeg-detail-echo.png |
+| D12 | Tabbar / 统计 / 角标抽查 | 首页 Tabbar 四入口可导航；统计卡 5 张；临期提醒=2项（阈值 30 天下牛奶+洗发水）；通知角标=1 | dstep-12-home-green-recheck.png |
+| D13 | 购物 / 设置抽查 | 洗洁精已购；`GET /api/settings` 返回 `expiry_remind_days=30` | dstep-13-shopping-settings-green.png |
+| D14 | 最终清扫 | 无 pageerror / 无 5xx / 无 failed 请求；4xx 仅预期分支（401×8 / 429×1 / 400 LAST_ADMIN / 400 魔数 / favicon 404） | dstep-14-final-clean-console.png |
+
+> 说明：停用成员触发 `/login` 的 `net::ERR_ABORTED` 是 401 拦截器 `window.location.href='/login'` 强制跳转中断在途导航的预期产物，已豁免。
+
+## 全量回归复跑
+
+- `family-storage.spec.js` 94 步全量回归复跑 **PASSED（1 passed，26.4s）**；截图证据 `docs/e2e/evidence-2026-09-25-FINAL-regress/`。
+- 控制台仅剩预期 4xx（favicon 404 / 库存 400 / 错误密码 401 / 注册关闭 403），无 pageerror、无 5xx、无 failed 请求。
+
+## 终轮结论 / 反馈
+
+- 未发现新的前端缺陷，无需修复；`docs/e2e` 已提交（含本次新增证据与防御分支 spec）。
+- 运行方式与主报告一致：先 `reset-e2e.ps1` 重置隔离库 → 依次运行 `family-storage.spec.js` 与 `family-storage-defenses.spec.js`，均需注入 `EVIDENCE_DIR` 与 `DB_PASSWORD`。
