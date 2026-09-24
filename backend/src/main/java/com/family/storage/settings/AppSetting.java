@@ -13,10 +13,10 @@ import jakarta.persistence.Table;
 @Table(name = "app_settings")
 public class AppSetting {
     @Id
-    @Column(name = "key", nullable = false, length = 50)
+    @Column(name = "`key`", nullable = false, length = 50)
     private String key;
 
-    @Column(name = "value", nullable = false, length = 255)
+    @Column(name = "`value`", nullable = false, length = 255)
     private String value;
 
     public String getKey() {

@@ -77,7 +77,13 @@ public class FileStorageService {
         if (fileName == null || fileName.isBlank()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_PATH", "文件路径不能为空");
         }
-        Path target = uploadDir.resolve(fileName).normalize();
+        // @PathVariable 捕获的路径可能带前导斜杠（如 /202601/abc.png），剥除后仍是相对路径；
+        // 反斜杠同样处理，避免 resolve 将之解释为文件系统根路径。
+        String relative = fileName.replaceFirst("^[/\\\\]+", "");
+        if (relative.isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_PATH", "非法文件路径");
+        }
+        Path target = uploadDir.resolve(relative).normalize();
         if (!target.startsWith(uploadDir) || target.equals(uploadDir)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_PATH", "非法文件路径");
         }

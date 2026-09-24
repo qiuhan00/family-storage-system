@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 
 /**
  * 全局异常处理：统一输出 {@code {code, message}} 错误体。
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler {
         String msg = e.getBindingResult().getFieldErrors().stream()
                 .map(f -> f.getField() + ": " + f.getDefaultMessage()).findFirst().orElse("参数校验失败");
         return ResponseEntity.badRequest().body(Map.of("code", "VALIDATION_ERROR", "message", msg));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<Map<String, String>> handleMultipart(MultipartException e) {
+        // 包含 MaxUploadSizeExceededException 及 Tomcat 容器层抛出的其他 multipart 异常
+        return ResponseEntity.badRequest().body(Map.of("code", "FILE_TOO_LARGE", "message", "文件大小不能超过 5MB"));
     }
 
     @ExceptionHandler(Exception.class)

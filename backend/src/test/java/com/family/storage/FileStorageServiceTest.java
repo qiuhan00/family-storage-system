@@ -101,6 +101,28 @@ class FileStorageServiceTest {
     }
 
     @Test
+    void deleteWithLeadingSlashStillDeletesStoredFile() throws Exception {
+        // D1 回归：@PathVariable {*name} 可能带前导斜杠（如 /202601/abc.png），必须仍能删除
+        var svc = new FileStorageService(tempDir.toString(), "/uploads");
+        var file = new MockMultipartFile("file", "photo.png", "image/png", new byte[] {1, 2, 3, 4});
+        String url = svc.store(file);
+        String relative = url.substring("/uploads/".length());
+        assertTrue(Files.exists(tempDir.resolve(relative)));
+
+        svc.delete("/" + relative);
+        assertFalse(Files.exists(tempDir.resolve(relative)), "带前导斜杠的删除应生效");
+    }
+
+    @Test
+    void deleteWithBackslashNotAllowedToEscapeBase() {
+        var svc = new FileStorageService(tempDir.toString(), "/uploads");
+        // Windows 下反斜杠剥除后重解析，穿越类输入仍必须被拒绝
+        ApiException ex = assertThrows(ApiException.class,
+                () -> svc.delete("\\..\\..\\outside.txt"));
+        assertEquals("INVALID_FILE_PATH", ex.getCode());
+    }
+
+    @Test
     void deleteOutsideBaseIsRejected() throws Exception {
         Path outside = Files.writeString(tempDir.resolveSibling("outside.txt"), "secret");
         var svc = new FileStorageService(tempDir.toString(), "/uploads");
