@@ -24,6 +24,11 @@ app:
     expire-hours: 168
   upload-dir: ${UPLOAD_DIR:./uploads}
 
+# 通知扩展点：SmsChannel 默认关闭（@ConditionalOnProperty sms.enabled=true 才注册）。
+# 开启后需在 SmsChannel 中接入短信厂商（凭据经环境变量注入，不入代码）。
+sms:
+  enabled: false
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
