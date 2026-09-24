@@ -67,6 +67,14 @@ public class GlobalExceptionHandler {
                 .body(Map.of("code", "STOCK_CONFLICT", "message", "物品数据已被其他操作修改，请重试"));
     }
 
+    @ExceptionHandler(org.springframework.dao.PessimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, String>> handleLockFailure(org.springframework.dao.PessimisticLockingFailureException e) {
+        // NEW-D1：并发下 MySQL 死锁/拿锁失败（CannotAcquireLockException 为其子类）同样映射 409 可重试，
+        // 避免落 500；死锁是并发下正常可重试场景，不需记 error（data 未损坏）。
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("code", "STOCK_CONFLICT", "message", "系统繁忙，请稍后重试"));
+    }
+
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<Map<String, String>> handleMultipart(MultipartException e) {
         // 包含 MaxUploadSizeExceededException 及 Tomcat 容器层抛出的其他 multipart 异常

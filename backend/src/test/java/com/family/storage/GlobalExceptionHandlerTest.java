@@ -36,6 +36,16 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void deadlockLockFailureMapsTo409ConflictNot500() {
+        // NEW-D1：并发出入库 MySQL 死锁 → CannotAcquireLockException（PessimisticLockingFailureException 子类）
+        // 必须映射 409 STOCK_CONFLICT 可重试，而不是落入 500 INTERNAL_ERROR。
+        com.family.storage.common.GlobalExceptionHandler h = new com.family.storage.common.GlobalExceptionHandler();
+        var resp = h.handleLockFailure(new org.springframework.dao.CannotAcquireLockException("deadlock"));
+        assertEquals(HttpStatus.CONFLICT.value(), resp.getStatusCode().value());
+        assertEquals("STOCK_CONFLICT", resp.getBody().get("code"));
+    }
+
+    @Test
     void malformedJsonMapsTo400BadRequest() {
         ResponseEntity<Map<String, String>> resp =
                 handler.handleBadRequest(new HttpMessageNotReadableException("malformed body"));

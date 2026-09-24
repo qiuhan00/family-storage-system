@@ -146,3 +146,54 @@
 - **79/79 全部通过，3 个原缺陷（D1/D2/D3）全部修复且未引入回归。**
 - 删除端点斜杠回归 5/5 通过（合法路径可删，畸形/穿越被拒绝）。
 - **Status=API_PASS**（本次复测验收通过）。
+
+---
+
+## 八、复测二（code-review 修复后，2026-09-25）
+
+- 修复基线：`453fad7`（修复提交 `13bb126`：M1-M7 + 生产 JWT 密钥兜底 + 价格边界）
+- 环境与首测一致：空库重建（DROP/CREATE `family_storage`，utf8mb4）→ Flyway V1/V2 重建 schema → 后端 spring-boot:run（Tomcat 8080）
+- 脚本与证据：`C:\Users\Administrator\AppData\Local\Temp\opencode\api-test\run-tests-v2.ps1`、`results-v2.json`、`evidence\*.res.txt`
+
+### 8.1 全量回归（原 79 用例 + 新增 29 个修复回归用例）
+
+| 指标 | 数值 |
+| --- | --- |
+| 用例总数 | 108 |
+| 通过 | **108（100%）** |
+| 失败 | 0 |
+| 平均耗时 | 约 18ms/用例（含并发 burst 为 0ms 汇总） |
+
+- 原 79 用例（A/U/C/L/I/S/F/N/E/P 各模块）全部继续通过，无回归。
+- 新增修复回归（X 系列，29 例）全部通过：
+
+| 修复点 | 新增用例 | 结果 |
+| --- | --- | --- |
+| 生产密钥无兜底（H1，非接口项） | —（人工检查 `deploy/start.sh` 存在 `JWT_SECRET` 非空 + `>=32` 字节校验；`application-prod.yml` `secret: ${JWT_SECRET}` 无默认值） | ✅ 已修 |
+| M6 最后启用 ADMIN 保护 | X01 自停用→400 `LAST_ADMIN`；X02 降级为 MEMBER→400 `LAST_ADMIN`；X70-X75 存在第二个 ADMIN 时停用/恢复/旧 token 全链路 200/401 正控 | ✅ 已修 |
+| M1 禁用用户旧 token 立即失效 | X10-X14：m1probe 登录→停用→旧 token 访问 `/me`→401 `USER_DISABLED` | ✅ 已修 |
+| M3 登录限流 | X20-X22：5 次失败全 401→第 6 次 429 `TOO_MANY_ATTEMPTS`；成功登录清零后 3f+ok+3f 序列全部 401 | ✅ 已修 |
+| M4 畸形输入统一 400 | X30 畸形 JSON→400 `BAD_REQUEST`；X31 `categoryId=abc` 类型错→400 `BAD_REQUEST` | ✅ 已修 |
+| M5 上传魔数校验 | X40 文本伪装 .jpg→400 `INVALID_FILE_TYPE`；X41 PNG 扩展名+JPEG 魔数→400；X42 真实 WebP（RIFF....WEBP）→200；X43 删除 webp→204；F04（>5MB 在魔数校验前）仍为 400 `FILE_TOO_LARGE` | ✅ 已修 |
+| 价格边界 | X50 负数→400 `INVALID_PRICE`；X51 超上限 99999999.99→400；X52 3 位小数→400；X53 0.00 边界→201 | ✅ 已修 |
+| M2 出入库并发（乐观锁） | X60-X62：正序 IN+2→200；100 个真实异步并发 IN+1 → 200/409 混合、无丢失更新（finalQty==expected），**但见 8.2 新缺陷** | ✅ 核心已修 + ⚠️ 见 8.2 |
+| M7 注册关闭 | A01（系统非空时注册→403 `REGISTRATION_CLOSED`）沿用 | ✅ 已修 |
+
+### 8.2 M2 并发专项与**新发现缺陷**
+
+- 100 个并发 IN+1（.NET HttpClient 异步同时到达）实测分布：**200=15、409=15、500=70、其他=0**；finalQty=117=100+2+15（**无丢失更新**，200/409 语义正确）。
+- 验证结论（M2 核心）：乐观锁冲突 → 409 `STOCK_CONFLICT` ✅；正常路径 → 200 ✅；版本并发不丢数据 ✅。
+- **新缺陷（NEW-D1，MEDIUM）**：高并发下 MySQL 死锁 → Hibernate `LockAcquisitionException`（服务端日志 `Deadlock found when trying to get lock; try restarting transaction`）未被 `GlobalExceptionHandler` 映射，落入兜底 → **HTTP 500 `INTERNAL_ERROR`**，而非契约意图的 409 `STOCK_CONFLICT`（重试提示）。数据无损坏（死锁事务整体回滚），但对客户端表现为 5xx。
+- 复现请求（token 为登录返回；对同一物品 50+ 并发同刻 POST 即可稳定触发）：
+  ```
+  POST /api/items/{id}/stock
+  Authorization: Bearer <token>
+  {"deltaQty":1,"type":"IN"}
+  ```
+- 修复建议：`GlobalExceptionHandler` 增补 `LockAcquisitionException`/`CannotAcquireLockException`/`PessimisticLockingFailureException` 映射 409 `STOCK_CONFLICT`（与乐观锁同一语义），或对死锁加 Spring Retry（MySQL 官方建议「try restarting transaction」）；不影响本次验收主结论。
+
+### 8.3 复测二结论
+
+- **108/108 全部通过；8 项 code-review 修复（H1 + M1-M7 + 价格边界）全部在接口层验证有效，未引入旧功能回归。**
+- 并发专项暴露 1 个新缺陷（死锁→500），建议后端按 8.2 修复后补一条死锁映射单测。
+- **Status=API_PASS**（复测二验收通过，附带新缺陷 NEW-D1 待后端处理）。
