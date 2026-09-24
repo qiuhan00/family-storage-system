@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,6 +19,8 @@ import java.time.LocalDateTime;
  * 物品实体（映射 V1 迁移 items 表，完整字段由 Task 4 补齐）。
  * 状态 ACTIVE/ARCHIVED；created_by 记录录入人；
  * created_at/updated_at 由 JPA 回调维护（schema 由 Flyway 管理，ddl-auto=none）。
+ * {@code version} 为 JPA 乐观锁版本列（见 V2 迁移），并发出入库时后写者冲突
+ * 抛 {@code ObjectOptimisticLockingFailureException}，由全局异常映射 409 STOCK_CONFLICT。
  */
 @Entity
 @Table(name = "items")
@@ -25,6 +28,11 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** 乐观锁版本列（V2__add_items_version.sql 新增，无业务含义，禁止手工更新）。 */
+    @Version
+    @Column(nullable = false)
+    private long version = 0L;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -86,6 +94,14 @@ public class Item {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
     }
 
     public String getName() {

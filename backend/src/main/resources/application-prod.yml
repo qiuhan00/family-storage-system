@@ -22,9 +22,11 @@ spring:
 
 app:
   jwt:
-    # 生产必须覆盖：正式部署时通过环境变量 JWT_SECRET 注入强随机密钥（>=32 字节）。
-    # 下方兜底值仅用于避免"缺变量即启动失败"，任何生产环境都不得使用它。
-    secret: ${JWT_SECRET:prod-secret-replace-me-at-least-32-bytes}
+    # 生产必须由环境变量 JWT_SECRET 注入强随机密钥（>=32 字节），与 DB_PASSWORD 一致：
+    # 无默认值 —— 缺失时 Spring 解析占位符失败、应用直接拒绝启动（快速失败）。
+    # 严禁提供任何兜底值：仓库内可读的默认密钥 = 公开伪签密钥，等于把系统交由攻击者托管。
+    # 生成示例（>=32 字节）：openssl rand -base64 48
+    secret: ${JWT_SECRET}
     expire-hours: 168
   upload-dir: ${UPLOAD_DIR:./uploads}
 

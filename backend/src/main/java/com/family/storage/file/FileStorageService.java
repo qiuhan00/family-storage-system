@@ -2,6 +2,7 @@ package com.family.storage.file;
 
 import com.family.storage.common.ApiException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -17,7 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * 图片文件存储（spec §5.6 / Task 7）：
  * 上传写入 {@code {uploadDir}/{yyyyMM}/{uuid}.{ext}}，返回 /uploads 前缀 URL；
- * 扩大扩展名与 Content-Type 白名单、5MB 大小上限；删除时做路径规范化，
+ * 三重校验：扩展名白名单 + Content-Type 图片类型 + 文件头魔数（code-review M5），
+ * 防止把 HTML/脚本 polyglot 伪装成图片上传；5MB 大小上限；删除时做路径规范化，
  * 以 uploadDir 为前缀校验，防止目录穿越。启动时创建上传根目录。
  */
 @Service
@@ -26,6 +28,14 @@ public class FileStorageService {
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "webp");
     private static final DateTimeFormatter MONTH = DateTimeFormatter.ofPattern("yyyyMM");
+
+    /** JPEG 魔数：FF D8 FF。 */
+    private static final byte[] MAGIC_JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
+    /** PNG 魔数：89 50 4E 47 0D 0A 1A 0A。 */
+    private static final byte[] MAGIC_PNG = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    /** WebP 魔数：RIFF....WEBP（前 4 字节 RIFF，第 8-11 字节 WEBP）。 */
+    private static final byte[] MAGIC_WEBP_RIFF = {'R', 'I', 'F', 'F'};
+    private static final byte[] MAGIC_WEBP_WEBP = {'W', 'E', 'B', 'P'};
 
     private final Path uploadDir;
     private final String urlPrefix;
@@ -58,6 +68,10 @@ public class FileStorageService {
         }
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "FILE_TOO_LARGE", "文件大小不能超过 5MB");
+        }
+        if (!magicMatches(ext, file)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE",
+                    "文件内容与声明图片类型不符（魔数校验失败）");
         }
 
         String month = LocalDate.now().format(MONTH);
@@ -95,6 +109,53 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_DELETE_FAILED", "文件删除失败");
         }
+    }
+
+    /**
+     * 魔数校验：读取文件头并与各图片格式比对，防止扩展名/Content-Type 造假的
+     * 非图片内容（HTML 等 polyglot）绕过白名单落盘。
+     */
+    private boolean magicMatches(String ext, MultipartFile file) {
+        try (InputStream in = file.getInputStream()) {
+            byte[] header = new byte[12];
+            int read = in.readNBytes(header, 0, header.length);
+            switch (ext) {
+                case "jpg", "jpeg" -> {
+                    return read >= MAGIC_JPEG.length
+                            && startsWith(header, MAGIC_JPEG);
+                }
+                case "png" -> {
+                    return read >= MAGIC_PNG.length
+                            && startsWith(header, MAGIC_PNG);
+                }
+                case "webp" -> {
+                    return read >= 12
+                            && startsWith(header, MAGIC_WEBP_RIFF)
+                            && startsWith(header, 8, MAGIC_WEBP_WEBP);
+                }
+                default -> {
+                    return true; // 扩展名已在入口白名单校验，理论不可达
+                }
+            }
+        } catch (IOException e) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "无法读取文件内容");
+        }
+    }
+
+    private boolean startsWith(byte[] data, byte[] prefix) {
+        return startsWith(data, 0, prefix);
+    }
+
+    private boolean startsWith(byte[] data, int offset, byte[] prefix) {
+        if (offset + prefix.length > data.length) {
+            return false;
+        }
+        for (int i = 0; i < prefix.length; i++) {
+            if (data[offset + i] != prefix[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String extensionOf(String filename) {

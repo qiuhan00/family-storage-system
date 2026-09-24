@@ -13,5 +13,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByEnabledTrue();
 
+    long countByEnabledTrueAndRole(Role role);
+
+    boolean existsByIdAndEnabledTrue(Long id);
+
     List<User> findByEnabledTrue();
 }

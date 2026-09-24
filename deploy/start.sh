@@ -36,6 +36,11 @@ if [ -z "${JWT_SECRET:-}" ]; then
   exit 1
 fi
 
+if [ "${#JWT_SECRET}" -lt 32 ]; then
+  echo "ERROR: JWT_SECRET must be at least 32 bytes, got ${#JWT_SECRET}. Refusing to start (weak key)." >&2
+  exit 1
+fi
+
 if [ -z "${DB_PASSWORD:-}" ]; then
   echo "ERROR: DB_PASSWORD is required. Refusing to start." >&2
   exit 1

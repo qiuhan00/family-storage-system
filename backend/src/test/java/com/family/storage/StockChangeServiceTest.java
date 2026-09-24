@@ -33,4 +33,18 @@ class StockChangeServiceTest {
         assertEquals(5, item.getQuantity());
         verify(stockChangeRepository).save(any());
     }
+
+    @Test
+    void optimisticLockConflictPropagatesFor409Mapping() {
+        // M2 回归：并发写时 save 抛乐观锁冲突（如 IN/OUT 同时基于旧 version 更新），
+        // 服务层不该吞掉，应由全局异常映射为 409 STOCK_CONFLICT 提示重试。
+        Item item = new Item();
+        item.setId(1L); item.setQuantity(2); item.setVersion(1L);
+        when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(itemRepository.save(any(Item.class)))
+                .thenThrow(new org.springframework.orm.ObjectOptimisticLockingFailureException(Item.class, 1L));
+        var svc = new ItemService(itemRepository, null, null, stockChangeRepository);
+        assertThrows(org.springframework.orm.ObjectOptimisticLockingFailureException.class,
+                () -> svc.adjustStock(1L, new StockRequest(-1, "OUT", "并发出库"), 9L));
+    }
 }

@@ -48,6 +48,10 @@ public class UserService {
 
     public UserResponse update(Long id, UserRequest req) {
         User u = find(id);
+        // M6：把启用态 ADMIN 降级为 MEMBER 前，若系统已无其他启用 ADMIN，拒绝
+        if (u.isEnabled() && u.getRole() == Role.ADMIN && req.role() != null && req.role() != Role.ADMIN) {
+            ensureAnotherEnabledAdminExists(u);
+        }
         u.setDisplayName(req.displayName());
         if (req.role() != null) {
             u.setRole(req.role());
@@ -60,9 +64,22 @@ public class UserService {
 
     public UserResponse setStatus(Long id, boolean enabled) {
         User u = find(id);
+        // M6：停用启用态 ADMIN 前，若系统已无其他启用 ADMIN，拒绝，保持系统可管理性
+        if (!enabled && u.isEnabled() && u.getRole() == Role.ADMIN) {
+            ensureAnotherEnabledAdminExists(u);
+        }
         u.setEnabled(enabled);
         userRepository.save(u);
         return UserResponse.of(u);
+    }
+
+    /** 校验除目标用户外仍有启用 ADMIN；否则抛 400 LAST_ADMIN。 */
+    private void ensureAnotherEnabledAdminExists(User target) {
+        long enabledAdmins = userRepository.countByEnabledTrueAndRole(Role.ADMIN);
+        if (enabledAdmins <= 1) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "LAST_ADMIN",
+                    "系统需保留至少一名启用状态的管理员，请先启用其他管理员");
+        }
     }
 
     public void resetPassword(Long id, ResetPasswordRequest req) {

@@ -20,6 +20,8 @@ spring:
 
 app:
   jwt:
+    # 仅开发/本地兜底密钥：任何环境不得在 prod profile 下使用（生产无默认值，见 application-prod.yml）。
+    # 生产必须由环境变量 JWT_SECRET 注入 >=32 字节强随机密钥。
     secret: ${JWT_SECRET:dev-secret-change-me-at-least-32-bytes}
     expire-hours: 168
   upload-dir: ${UPLOAD_DIR:./uploads}
