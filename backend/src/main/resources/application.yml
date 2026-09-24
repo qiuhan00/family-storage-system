@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/family_storage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: ${DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-change-me-at-least-32-bytes}
+    expire-hours: 168
+  upload-dir: ${UPLOAD_DIR:./uploads}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
