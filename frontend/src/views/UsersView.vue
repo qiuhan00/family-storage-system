@@ -1,11 +1,9 @@
 <!-- src/views/UsersView.vue（ADMIN）—— 成员管理：分页列表（用户名/显示名/角色/状态）、
      新增成员（含密码，可选留空由后端随机生成）、启用/停用 Switch、重置密码（新密码 Dialog）。
      契约 §5.2 无删除端点，故不提供删除。
-     注意：后端 UserResponse 不含 enabled 字段，行「状态」由本地 enabledMap 记录
-     （首次访问默认启用=实体默认值），PATCH /users/{id}/status 为真实启停入口——
-     契约缺口详见 task-14-report。 -->
+     状态启用/停用：UserResponse.enabled（R13 后契约已含该字段），Switch 直接读写。 -->
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant/es/toast';
 import 'vant/es/toast/style';
@@ -85,23 +83,24 @@ async function onRefresh() {
   }
 }
 
-// --- 状态（启停）Switch：本地 enabledMap + PATCH 持久化 ---
-const enabledMap = reactive<Record<number, boolean>>({});
+// --- 状态（启停）Switch：直接读 u.enabled + PATCH 持久化 ---
 
 const roleLabel: Record<Role, string> = { ADMIN: '管理员', MEMBER: '成员' };
 
 function isEnabled(u: UserResponse): boolean {
-  // 契约缺口：列表响应无 enabled；后端实体默认启用，本地维护使 Switch 可交互。
-  return enabledMap[u.id] ?? true;
+  return u.enabled;
 }
 
 async function onToggleEnabled(u: UserResponse, checked: boolean) {
-  enabledMap[u.id] = checked;
+  if (u.role === 'ADMIN') {
+    showToast('不能停用管理员账户');
+    return;
+  }
   try {
     await usersApi.setStatus(u.id, checked);
+    u.enabled = checked;
     showToast(checked ? '已启用' : '已停用');
   } catch (e) {
-    enabledMap[u.id] = !checked;
     showToast(apiErrorMessage(e, '状态更新失败'));
   }
 }

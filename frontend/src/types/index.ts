@@ -3,12 +3,13 @@
 /** 用户角色。 */
 export type Role = 'ADMIN' | 'MEMBER';
 
-/** 登录用户响应（spec §5.1/§5.2）。 */
+/** 登录用户响应（spec §5.1/§5.2；enabled 供启停回显）。 */
 export interface UserResponse {
   id: number;
   username: string;
   displayName: string;
   role: Role;
+  enabled: boolean;
 }
 
 /** 认证响应：JWT + 用户信息。 */

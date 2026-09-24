@@ -1,6 +1,5 @@
 // src/api/users.ts —— 成员管理接口封装（spec §5.2，仅 ADMIN：分页列表/创建/更新/启停/重置密码）。
-// 注意：UserResponse 契约仅含 {id, username, displayName, role}，不含 enabled —— 启停状态
-// 无法从响应读取（见 task-14-report 契约问题记录），setStatus 的入参 enabled 是唯一写入口。
+// UserResponse.enabled（R13）反映启停状态，Switch 直接读写。
 import { http } from './http';
 import type { PageResponse, Role, UserResponse } from '../types';
 
