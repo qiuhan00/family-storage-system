@@ -70,7 +70,7 @@ describe('useAuthStore', () => {
   it('login stores token + user and persists token', async () => {
     const authResponse = {
       token: 'jwt-x',
-      user: { id: 1, username: 'alice', displayName: 'Alice', role: 'ADMIN' as const },
+      user: { id: 1, username: 'alice', displayName: 'Alice', role: 'ADMIN' as const, enabled: true },
     };
     vi.mocked(authApi.login).mockResolvedValue(authResponse);
 
@@ -98,7 +98,7 @@ describe('useAuthStore', () => {
   it('register stores token + user and persists token', async () => {
     const authResponse = {
       token: 'jwt-reg',
-      user: { id: 1, username: 'bob', displayName: 'Bob', role: 'ADMIN' as const },
+      user: { id: 1, username: 'bob', displayName: 'Bob', role: 'ADMIN' as const, enabled: true },
     };
     vi.mocked(authApi.register).mockResolvedValue(authResponse);
 
@@ -126,7 +126,7 @@ describe('useAuthStore', () => {
     setToken('jwt-x');
     const store = useAuthStore();
     store.init();
-    store.user = { id: 1, username: 'alice', displayName: 'Alice', role: 'ADMIN' };
+    store.user = { id: 1, username: 'alice', displayName: 'Alice', role: 'ADMIN', enabled: true };
 
     store.logout();
 

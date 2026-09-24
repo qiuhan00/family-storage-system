@@ -1,0 +1,37 @@
+# 生产环境配置（--spring.profiles.active=prod）。
+# 真相源为环境变量：真实值一律通过启动环境注入，禁止写死到本文件/仓库。
+# 示例：deploy/start.sh、.env.example。
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/family_storage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+app:
+  jwt:
+    # 生产必须覆盖：正式部署时通过环境变量 JWT_SECRET 注入强随机密钥（>=32 字节）。
+    # 下方兜底值仅用于避免"缺变量即启动失败"，任何生产环境都不得使用它。
+    secret: ${JWT_SECRET:prod-secret-replace-me-at-least-32-bytes}
+    expire-hours: 168
+  upload-dir: ${UPLOAD_DIR:./uploads}
+
+# 通知扩展点：生产默认关闭，开启需接入短信厂商凭据（环境变量注入）。
+sms:
+  enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
