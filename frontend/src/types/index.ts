@@ -159,3 +159,37 @@ export interface ItemCountByDimension {
 export interface FileUploadResponse {
   url: string;
 }
+
+/** 物品创建/更新请求体（spec §5.4 ItemRequest，status 不随请求变更）。 */
+export interface ItemPayload {
+  name: string;
+  categoryId: number;
+  locationId: number;
+  quantity: number;
+  unit: string | null;
+  purchasePrice: number | null;
+  purchaseDate: string | null;
+  expiryDate: string | null;
+  photoUrl: string | null;
+  remark: string | null;
+}
+
+/** 出入库请求体（spec §5.4 POST /items/{id}/stock；deltaQty 正入负出）。 */
+export interface StockAdjustPayload {
+  deltaQty: number;
+  type: 'IN' | 'OUT' | 'ADJUST';
+  note: string | null;
+}
+
+/** 分类创建/更新请求体（spec §5.3 CategoryRequest）。 */
+export interface CategoryPayload {
+  name: string;
+  sortOrder?: number | null;
+}
+
+/** 位置创建/更新请求体（spec §5.3 LocationRequest；parentId 为 null 表示根节点）。 */
+export interface LocationPayload {
+  name: string;
+  parentId?: number | null;
+  sortOrder?: number;
+}

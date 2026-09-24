@@ -1,24 +1,40 @@
-<!-- src/views/LayoutView.vue —— 主布局：顶部 NavBar（右侧通知角标）+ 中部 router-view + 底部 Tabbar。 -->
+<!-- src/views/LayoutView.vue —— 主布局：顶部 NavBar（详情/编辑页带返回箭头，右侧通知角标）+ 中部 router-view + 底部 Tabbar。 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import NotificationBadge from '../components/NotificationBadge.vue';
 
 const route = useRoute();
+const router = useRouter();
 
 const titles: Record<string, string> = {
   home: '首页',
   items: '物品',
+  'item-new': '新增物品',
+  'item-detail': '物品详情',
+  'item-edit': '编辑物品',
   shopping: '购物',
   profile: '我的',
 };
 
 const pageTitle = computed(() => titles[String(route.name)] ?? '家庭收纳');
+const showBack = computed(() => Boolean(route.meta.back));
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    void router.replace('/');
+  }
+}
 </script>
 
 <template>
   <div class="layout-root">
     <van-nav-bar :title="pageTitle" fixed placeholder>
+      <template #left>
+        <van-icon v-if="showBack" name="arrow-left" size="20" @click="goBack" />
+      </template>
       <template #right>
         <NotificationBadge />
       </template>

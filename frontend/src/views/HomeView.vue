@@ -1,6 +1,7 @@
 <!-- src/views/HomeView.vue —— 首页：统计总览 + 临期物品 + 分类/位置维度折叠统计。 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { showToast } from 'vant/es/toast';
 import 'vant/es/toast/style';
 import { statisticsApi } from '../api/statistics';
@@ -9,6 +10,8 @@ import type { Item } from '../types';
 import type { ItemCountByDimension, Summary } from '../types';
 
 const REMIND_DAYS = 7;
+
+const router = useRouter();
 
 const summary = ref<Summary | null>(null);
 const expiringItems = ref<Item[]>([]);
@@ -73,9 +76,9 @@ async function loadDimensions() {
   }
 }
 
-/** 临期物品点击：详情路由由 Task 13 提供（当前先给可感知反馈）。 */
+/** 临期物品点击：跳转物品详情页。 */
 function onItemTap(item: Item) {
-  showToast(`${item.name} 详情将在物品管理上线后提供`);
+  void router.push(`/items/${item.id}`);
 }
 
 onMounted(() => {

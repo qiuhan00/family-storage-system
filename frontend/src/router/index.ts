@@ -24,6 +24,24 @@ const router = createRouter({
       children: [
         { path: '', name: 'home', component: () => import('../views/HomeView.vue') },
         { path: 'items', name: 'items', component: () => import('../views/ItemsView.vue') },
+        {
+          path: 'items/new',
+          name: 'item-new',
+          component: () => import('../views/ItemEditView.vue'),
+          meta: { requiresAuth: true, back: true },
+        },
+        {
+          path: 'items/:id',
+          name: 'item-detail',
+          component: () => import('../views/ItemDetailView.vue'),
+          meta: { requiresAuth: true, back: true },
+        },
+        {
+          path: 'items/:id/edit',
+          name: 'item-edit',
+          component: () => import('../views/ItemEditView.vue'),
+          meta: { requiresAuth: true, back: true },
+        },
         { path: 'shopping', name: 'shopping', component: () => import('../views/ShoppingView.vue') },
         { path: 'profile', name: 'profile', component: () => import('../views/ProfileView.vue') },
       ],

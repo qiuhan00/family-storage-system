@@ -24,3 +24,12 @@ http.interceptors.response.use(
     return Promise.reject(err);
   },
 );
+
+/** 从 axios 错误里提取后端统一错误体 {code,message} 的中文 message，取不到时给兜底文案。 */
+export function apiErrorMessage(err: unknown, fallback = '操作失败，请稍后重试'): string {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const body = (err as { response?: { data?: { message?: unknown } } }).response?.data;
+    if (body && typeof body.message === 'string' && body.message) return body.message;
+  }
+  return fallback;
+}
