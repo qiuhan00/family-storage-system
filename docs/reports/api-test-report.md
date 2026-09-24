@@ -101,3 +101,48 @@
 
 1. 先修 D1（阻断）与 D2，再修 D3；修复后重跑本报告附带的 79 用例（尤其 F04/F05/E02）。
 2. 建议补充：删除端点对「前导斜杠、双斜杠、反斜杠」的用例，防止路径规范化回归。
+
+---
+
+## 七、复测（D1-D3 修复后，2026-09-24）
+
+- 修复基线：`bc52e1c`（fix: leading-slash file delete, mysql reserved key quoting, multipart size 400）
+- 环境与首测一致（空库重建 → Flyway 重建 schema → 后端 PID 9104 / Tomcat 8080）
+
+### 7.1 全量回归
+
+| 指标 | 数值 |
+| --- | --- |
+| 重跑用例 | 79 |
+| 通过 | **79（100%）** |
+| 失败 | 0 |
+
+脚本与证据：`C:\Users\Administrator\AppData\Local\Temp\opencode\api-test\run-tests.ps1`（复用）、`results.json`（覆盖为复测结果）、`evidence\*.res.txt`。
+
+### 7.2 原缺陷复核（专项证据）
+
+| 用例 | 首测 | 复测 | 证据（evidence\*.res.txt） |
+| --- | --- | --- | --- |
+| F04 上传 >5MB | 500 INTERNAL_ERROR | **400 FILE_TOO_LARGE** | F04: `HTTP 400 {"code":"FILE_TOO_LARGE","message":"文件大小不能超过 5MB"}` |
+| F05 删除上传文件 | 400 INVALID_FILE_PATH | **204** | F05: `HTTP 204` |
+| E02 PUT 白名单设置 | 500 INTERNAL_ERROR | **200** | E02: `HTTP 200 {"expiry_remind_days":10}` |
+
+### 7.3 删除端点斜杠回归（回归建议 #2 专项）
+
+新增 5 个形态用真实上传文件逐一验证（新 token，ADMIN）：
+
+| 编号 | 形态 | 结果 | 判定 |
+| --- | --- | --- | --- |
+| R01 | 正常相对路径 `202609/uuid.png` | 204 删除成功 | 通过 |
+| R02 | 前导双斜杠 `/api/files//uuid.png` | 401（未认证层拒绝） | 通过（不误删） |
+| R03 | 内部双斜杠 `202609//uuid.png` | 401（未认证层拒绝） | 通过（不误删） |
+| R04 | 反斜杠 `202609%5Cuuid.png` | 400 Bad Request（Tomcat 层拒绝） | 通过（不误删） |
+| R05 | 穿越 `..%2F…` | 400 Bad Request（Tomcat 层拒绝） | 通过（防穿越） |
+
+说明：R01 为 D1 修复核心路径（`FileStorageService.delete` 剥除前导 `/`、`\` 后规范化），已确认修复。R02-R05 为畸形/恶意形态，均被安全层拒绝且不会删除文件；其中 R02/R03 落在认证层（Tomcat/Spring 对双斜杠路径的匹配结果而非服务层），R04/R05 被 Tomcat 400 拦截，符合防御预期，不作为新缺陷。
+
+### 7.4 复测结论
+
+- **79/79 全部通过，3 个原缺陷（D1/D2/D3）全部修复且未引入回归。**
+- 删除端点斜杠回归 5/5 通过（合法路径可删，畸形/穿越被拒绝）。
+- **Status=API_PASS**（本次复测验收通过）。
