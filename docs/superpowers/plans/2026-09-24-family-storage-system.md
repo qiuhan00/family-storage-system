@@ -4,7 +4,7 @@
 
 **Goal:** 交付一个可上云部署的家庭收纳管理系统：手机优先的 Vue 前端 + Spring Boot 后端 + MySQL，支持多人账号、物品/分类/位置检索、购物清单、临期站内提醒（预留短信通道）、照片、价格统计。
 
-**Architecture:** 前后端分离单体仓库。`backend/` Spring Boot 3 提供 REST API（JWT 无状态认证，通知走 `NotificationChannel` 接口，临期扫描为每日定时任务）；`frontend/` Vue 3 + Vant 移动优先 SPA；生产 `docker-compose.yml` 起 mysql + backend + frontend(nginx)。
+**Architecture:** 前后端分离单体仓库。`backend/` Spring Boot 3 提供 REST API（JWT 无状态认证，通知走 `NotificationChannel` 接口，临期扫描为每日定时任务）；`frontend/` Vue 3 + Vant 移动优先 SPA；生产非容器部署（jar + nginx 反代）。
 
 **Tech Stack:** Java 17 / Spring Boot 3.3 / Spring Data JPA / Spring Security / JWT(jjwt 0.12) / Flyway / MySQL 8 / Maven；Vue 3 / TypeScript / Vite / Pinia / Vue Router / Vant / Axios / dayjs / vitest。
 
@@ -73,8 +73,10 @@ class StorageApplicationTests {
 
 - [ ] **Step 2: 先写 `pom.xml`、`application.yml`、`StorageApplication.java`，再跑测试验证失败（连不上 MySQL）**
 
-Run: `cd backend; mvn test`（先准备 MySQL：`docker run -d --name fs-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=family_storage -p 3306:3306 mysql:8 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci`）
-Expected: FAIL，`Communications link failure` 或 `UnknownHostException`。
+Run: `cd backend; mvn test`
+数据库：本机 MySQL 5.7（服务 MySQL57，库 `family_storage` 已建好，utf8mb4）。连接密码从用户级环境变量读取，命令前执行：
+`$env:DB_PASSWORD = [Environment]::GetEnvironmentVariable('DB_PASSWORD','User')`
+Expected: FAIL（`Communications link failure` / 认证失败 / UnknownHost 等其一）。
 
 - [ ] **Step 3: 实现骨架**
 
@@ -142,7 +144,8 @@ springdoc:
 - `users(username UNIQUE, password_hash VARCHAR(100), display_name VARCHAR(50), role VARCHAR(20), email VARCHAR(100), phone VARCHAR(20), enabled BIT DEFAULT 1, created_at, updated_at)`
 - `categories(name UNIQUE, sort_order INT)`
 - `locations(name, parent_id NULL FK->locations.id, sort_order INT)`
-- `items(name, category_id FK, location_id FK, quantity INT, unit VARCHAR(20), purchase_price DECIMAL(10,2), purchase_date DATE NULL, expiry_date DATE NULL, photo_url VARCHAR(255), status VARCHAR(20) DEFAULT 'ACTIVE', remark VARCHAR(500), created_by BIGINT FK->users.id, created_at, updated_at)`，索引 `name`、`expiry_date`、`(category_id, location_id)`
+- `items(name VARCHAR(100), category_id FK, location_id FK, quantity INT, unit VARCHAR(20), purchase_price DECIMAL(10,2), purchase_date DATE NULL, expiry_date DATE NULL, photo_url VARCHAR(255), status VARCHAR(20) DEFAULT 'ACTIVE', remark VARCHAR(500), created_by BIGINT FK->users.id, created_at, updated_at)`，索引 `idx_items_name (name(64))`、`idx_items_expiry (expiry_date)`、`(category_id, location_id)`
+  - MySQL 5.7 utf8mb4 前缀索引长度上限：所有索引列按 VARCHAR(100) 以内 + 长文本用 `name(64)` 前缀，规避 767 字节限制。
 - `stock_changes(item_id FK, change_qty INT, type VARCHAR(20), note VARCHAR(200), created_by BIGINT, created_at)`
 - `shopping_items(name, quantity INT, unit VARCHAR(20), category_id FK NULL, remark VARCHAR(200), status VARCHAR(20) DEFAULT 'PENDING', created_by BIGINT, created_at, completed_at NULL)`
 - `notifications(user_id FK, title VARCHAR(100), body VARCHAR(500), type VARCHAR(20), ref_id BIGINT NULL, reminder_key VARCHAR(100) NULL, read_flag BIT DEFAULT 0, created_at)`，唯一索引 `(user_id, reminder_key)`
@@ -386,9 +389,10 @@ class AuthServiceTest {
 
     @Test
     void garbageTokenParsingFails() {
-        when(jwtTokenProvider.parseUserId("not-a-jwt")).thenThrow(new io.jsonwebtoken.JwtException("bad"));
-        assertThrows(io.jsonwebtoken.JwtException.class,
-                () -> jwtTokenProvider.parseUserId("not-a-jwt"));
+        // 用真实 provider（32+ 字节密钥）验证垃圾串抛 JwtException，避免只测 mock
+        var provider = new com.family.storage.auth.JwtTokenProvider(
+                "unit-test-secret-key-at-least-32-bytes-long", 1L);
+        assertThrows(io.jsonwebtoken.JwtException.class, () -> provider.parseUserId("not-a-jwt"));
     }
 }
 ```
@@ -1284,7 +1288,7 @@ git commit -m "feat: statistics summary and dimension aggregation"
 - Consumes: Task 1–9 全部端点。
 - Produces: `docs/reports/api-test-report.md`；通过标准：spec §5 全部端点通过、401/403/400/404 覆盖、临期幂等通过。
 
-- [ ] **Step 1: 启动后端与 MySQL**（`mvn spring-boot:run` + fs-mysql 容器）
+- [ ] **Step 1: 启动后端与 MySQL**（`mvn spring-boot:run` + 本机 MySQL 5.7）
 - [ ] **Step 2: 调用 api-tester 加载技能并跑全量接口契约用例**（非敏感数据经 Task 传参）
 - [ ] **Step 3: 修复 api-tester 反馈缺陷，复测直至通过**
 - [ ] **Step 4: Commit**
@@ -1567,36 +1571,41 @@ git commit -m "test: frontend e2e regression passing"
 
 ---
 
-### Task 16: 生产部署（Docker Compose + nginx + Dockerfile）
+### Task 16: 生产打包与非容器部署准备
 
 **Files:**
-- Create: `backend/Dockerfile`
-- Create: `frontend/Dockerfile`、`frontend/nginx.conf`
-- Create: `docker-compose.yml`
-- Create: `.env.example`（`DB_PASSWORD`、`JWT_SECRET`、`MYSQL_ROOT_PASSWORD`，不入 Git 真实值）
-- Create: `.gitignore`（含 `.env`、`backend/uploads/`、`target/`、`node_modules/`、`dist/`）
+- Create: `backend/src/main/resources/application-prod.yml`（生产配置：读环境变量 DB 地址/口令、`JWT_SECRET`、`UPLOAD_DIR`；示例占位值留空——真实值只经环境变量）
+- Create: `deploy/nginx-family-storage.conf`（nginx server 块示例：静态托管 + `/api` 反代 8080 + `/uploads` 别名上传目录 + HTTPS 注释）
+- Create: `deploy/start.sh`（示例：`JWT_SECRET=<env> DB_PASSWORD=<env> java -jar backend/target/*.jar`，服务化/守护提醒，不写死任何真实密钥）
+- Create: `.env.example`（键 `DB_PASSWORD`、`DB_URL`、`JWT_SECRET`、`UPLOAD_DIR` 的说明与示例，**不含任何真实值**）
+- Modify: `.gitignore`（.gitignore 已存在，核对需含 `backend/uploads/`、`target/`、`node_modules/`、`dist/`）
 
 **Interfaces:**
-- Consumes: Task 6 产物（jar 由 `mvn package` 产出）；前端 `npm run build` 产物。
-- Produces: 单命令 `docker compose up -d` 起 mysql+backend+frontend(nginx)；`/api`、`/uploads` 反代后端；uploads 卷共享。
+- Consumes: Task 1–15 产物（jar 由 `mvn package` 产出；前端 `npm run build` 产出 `dist/`）。
+- Produces: 非容器交付物——jar + `frontend/dist` 静态资源 + nginx 反代配置 + 部署文档；不使用 Docker。
 
 - [ ] **Step 1: 验证本地构建**
 
-Run: `cd backend; mvn -DskipTests package; cd ../frontend; npm run build`
-Expected: `target/*.jar` 与 `dist/` 存在。
+Run (PowerShell)：
+`cd backend; $env:JAVA_HOME="D:\Java\jdk-17"; & "D:\apache-maven-3.9.16\bin\mvn.cmd" -DskipTests package; cd ../frontend; npm run build`
+Expected: `backend/target/*.jar` 与 `frontend/dist/` 存在。
 
-- [ ] **Step 2: 写 Dockerfile 与 compose**（mysql8 卷+时区；backend 用 `eclipse-temurin:17-jre`，`SPRING_DATASOURCE_URL` 指向 compose 服务名 `mysql`；frontend 用 `nginx:1.27-alpine` + 反代配置、共享 `uploads` 卷到 `/app/uploads` 与 `/_uploads` 映射——统一对外 `/uploads`。）
+- [ ] **Step 2: 写生产配置与 nginx 样例**
 
-- [ ] **Step 3: 本机起 Composer 冒烟**
+- `application-prod.yml`：`spring.datasource.url=${DB_URL}`、`password=${DB_PASSWORD}`、`app.jwt.secret=${JWT_SECRET}`、`app.upload-dir=${UPLOAD_DIR}`；不出现真实值。
+- `deploy/nginx-family-storage.conf`：`server { listen 80; root <dist 绝对路径>; location /api { proxy_pass http://127.0.0.1:8080; } location /uploads { alias <UPLOAD_DIR>; } }`，certbot TLS 见注释。
+- `deploy/start.sh`：`JWT_SECRET="$JWT_SECRET" DB_PASSWORD="$DB_PASSWORD" java -jar app.jar --spring.profiles.active=prod`（脚本校验两个环境变量已设置才启动）。
 
-Run: `docker compose up -d --build`
-Expected: 三容器 Healthy；浏览器 `http://localhost` 可注册登录。
+- [ ] **Step 3: 本机冒烟（非 Docker）**
+
+Run: 用 prod profile 本地起 jar（设 DB/密钥环境变量，连本机 MySQL）→ `curl http://localhost:8080/api/...`
+Expected: 后端可独立启动，接口可达。
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add docker-compose.yml backend/Dockerfile frontend/Dockerfile frontend/nginx.conf .env.example .gitignore
-git commit -m "feat: docker compose production stack"
+git add backend/src/main/resources/application-prod.yml deploy .env.example .gitignore
+git commit -m "feat: production packaging and nginx reverse-proxy config (non-container)"
 ```
 
 ---
