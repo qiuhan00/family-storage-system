@@ -3,6 +3,7 @@ package com.family.storage.item;
 import com.family.storage.common.PageResponse;
 import com.family.storage.item.dto.ItemRequest;
 import com.family.storage.item.dto.ItemResponse;
+import com.family.storage.item.dto.StockChangeResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 物品端点（spec §5.4，/api/items）。需登录（SecurityConfig 默认拦截）；
- * create 取当前登录用户身份写入 created_by。
+ * create 取当前登录用户身份写入 created_by；出入库与变更历史同域。
  */
 @RestController
 @RequestMapping("/api/items")
@@ -66,5 +67,17 @@ public class ItemController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         itemService.delete(id);
+    }
+
+    @PostMapping("/{id}/stock")
+    public StockChangeResponse adjustStock(@PathVariable Long id,
+                                           @RequestBody @Valid StockRequest req,
+                                           @AuthenticationPrincipal Long userId) {
+        return itemService.adjustStock(id, req, userId);
+    }
+
+    @GetMapping("/{id}/stock-changes")
+    public List<StockChangeResponse> stockHistory(@PathVariable Long id) {
+        return itemService.stockHistory(id);
     }
 }
