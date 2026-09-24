@@ -1,47 +1,230 @@
-// src/views/HomeView.vue —— 首页占位（物品清单等页面由后续任务实现）。
+<!-- src/views/HomeView.vue —— 首页：统计总览 + 临期物品 + 分类/位置维度折叠统计。 -->
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
 import { showToast } from 'vant/es/toast';
 import 'vant/es/toast/style';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../store/auth';
+import { statisticsApi } from '../api/statistics';
+import { itemsApi } from '../api/items';
+import type { Item } from '../types';
+import type { ItemCountByDimension, Summary } from '../types';
 
-const router = useRouter();
-const auth = useAuthStore();
+const REMIND_DAYS = 7;
 
-const onLogout = () => {
-  auth.logout();
-  showToast('已退出登录');
-  router.replace('/login');
-};
+const summary = ref<Summary | null>(null);
+const expiringItems = ref<Item[]>([]);
+const byCategory = ref<ItemCountByDimension[]>([]);
+const byLocation = ref<ItemCountByDimension[]>([]);
+const loadingSummary = ref(true);
+const loadingExpiring = ref(true);
+const loadingDims = ref(true);
+const activeDim = ref<string[]>(['category']);
+
+const statCards = computed(() => {
+  const s = summary.value;
+  if (!s) return [];
+  return [
+    { label: '物品总数', value: String(s.totalItems), suffix: '件' },
+    { label: '在库总量', value: String(s.totalQuantity), suffix: '' },
+    { label: '总价值', value: fmtMoney(s.totalValue), suffix: '元' },
+    { label: '临期提醒', value: String(s.expiringSoon), suffix: '项' },
+    { label: '待购清单', value: String(s.pendingShopping), suffix: '项' },
+  ];
+});
+
+function fmtMoney(n: number): string {
+  return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function loadSummary() {
+  loadingSummary.value = true;
+  try {
+    summary.value = await statisticsApi.summary();
+  } catch {
+    showToast('统计加载失败，请稍后重试');
+  } finally {
+    loadingSummary.value = false;
+  }
+}
+
+async function loadExpiring() {
+  loadingExpiring.value = true;
+  try {
+    expiringItems.value = await itemsApi.expiring(REMIND_DAYS);
+  } catch {
+    showToast('临期物品加载失败，请稍后重试');
+  } finally {
+    loadingExpiring.value = false;
+  }
+}
+
+async function loadDimensions() {
+  loadingDims.value = true;
+  try {
+    const [category, location] = await Promise.all([
+      statisticsApi.byCategory(),
+      statisticsApi.byLocation(),
+    ]);
+    byCategory.value = category;
+    byLocation.value = location;
+  } catch {
+    showToast('维度统计加载失败，请稍后重试');
+  } finally {
+    loadingDims.value = false;
+  }
+}
+
+/** 临期物品点击：详情路由由 Task 13 提供（当前先给可感知反馈）。 */
+function onItemTap(item: Item) {
+  showToast(`${item.name} 详情将在物品管理上线后提供`);
+}
+
+onMounted(() => {
+  void loadSummary();
+  void loadExpiring();
+  void loadDimensions();
+});
 </script>
 
 <template>
   <div class="home-page">
-    <h1>家庭收纳物品管理系统</h1>
-    <p class="home-tip">物品清单、分类、位置与购物清单功能开发中（后续任务交付）。</p>
-    <p class="home-user" v-if="auth.user">当前用户：{{ auth.user.displayName }}</p>
-    <van-button size="small" plain @click="onLogout">退出登录</van-button>
+    <!-- 统计总览 -->
+    <section class="home-section">
+      <h2 class="section-title">统计总览</h2>
+      <div v-if="loadingSummary" class="block-loading">
+        <van-loading size="24">加载中…</van-loading>
+      </div>
+      <div v-else-if="summary" class="stat-grid">
+        <div
+          v-for="card in statCards"
+          :key="card.label"
+          class="stat-card"
+          :class="{ 'stat-card--warning': card.label === '临期提醒' && summary!.expiringSoon > 0 }"
+        >
+          <div class="stat-card__value">{{ card.value }}<span class="stat-card__suffix">{{ card.suffix }}</span></div>
+          <div class="stat-card__label">{{ card.label }}</div>
+        </div>
+      </div>
+      <van-empty v-else description="暂无统计数据" image-size="60" />
+    </section>
+
+    <!-- 临期物品 -->
+    <section class="home-section">
+      <h2 class="section-title">临期提醒（7 天内）</h2>
+      <div v-if="loadingExpiring" class="block-loading">
+        <van-loading size="24">加载中…</van-loading>
+      </div>
+      <van-empty v-else-if="expiringItems.length === 0" description="暂无临期物品" image-size="60" />
+      <van-cell-group v-else inset>
+        <van-cell
+          v-for="item in expiringItems"
+          :key="item.id"
+          :title="item.name"
+          :label="`临期 ${item.expiryDate} · 余量 ${item.quantity}${item.unit}`"
+          is-link
+          @click="onItemTap(item)"
+        />
+      </van-cell-group>
+    </section>
+
+    <!-- 分类 / 位置维度 -->
+    <section class="home-section">
+      <h2 class="section-title">维度统计</h2>
+      <div v-if="loadingDims" class="block-loading">
+        <van-loading size="24">加载中…</van-loading>
+      </div>
+      <van-collapse v-else v-model="activeDim" class="dim-collapse">
+        <van-collapse-item title="按分类统计" name="category">
+          <van-cell-group inset>
+            <van-cell
+              v-for="row in byCategory"
+              :key="row.dimensionId"
+              :title="row.dimensionName"
+              :label="`${row.itemCount} 件 · 总量 ${row.totalQuantity} · 价值 ${fmtMoney(row.totalValue)} 元`"
+            />
+            <van-empty v-if="byCategory.length === 0" description="暂无分类数据" image-size="60" />
+          </van-cell-group>
+        </van-collapse-item>
+        <van-collapse-item title="按位置统计" name="location">
+          <van-cell-group inset>
+            <van-cell
+              v-for="row in byLocation"
+              :key="row.dimensionId"
+              :title="row.dimensionName"
+              :label="`${row.itemCount} 件 · 总量 ${row.totalQuantity} · 价值 ${fmtMoney(row.totalValue)} 元`"
+            />
+            <van-empty v-if="byLocation.length === 0" description="暂无位置数据" image-size="60" />
+          </van-cell-group>
+        </van-collapse-item>
+      </van-collapse>
+    </section>
   </div>
 </template>
 
 <style scoped>
 .home-page {
-  min-height: 100vh;
-  padding: 20vh 24px;
-  text-align: center;
-  background: #f7f8fa;
+  padding: 12px 0 24px;
 }
-.home-page h1 {
-  margin: 0 0 12px;
-  font-size: 22px;
+
+.home-section {
+  margin-bottom: 8px;
+  padding: 4px 0;
+  background: #fff;
+}
+
+.section-title {
+  margin: 0;
+  padding: 12px 16px 4px;
+  font-size: 16px;
+  font-weight: 600;
   color: #323233;
 }
-.home-tip {
-  font-size: 14px;
+
+.block-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px 16px 16px;
+}
+
+.stat-card {
+  border: 1px solid #ebedf0;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f7f8fa;
+}
+
+.stat-card--warning {
+  border-color: #ff976a;
+  background: #fff7f2;
+}
+
+.stat-card__value {
+  font-size: 22px;
+  font-weight: 600;
+  color: #323233;
+}
+
+.stat-card__suffix {
+  margin-left: 2px;
+  font-size: 12px;
+  font-weight: 400;
   color: #969799;
 }
-.home-user {
-  font-size: 14px;
-  color: #646566;
+
+.stat-card__label {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #969799;
+}
+
+.dim-collapse {
+  border-radius: 8px;
+  overflow: hidden;
 }
 </style>
