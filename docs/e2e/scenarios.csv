@@ -1,0 +1,107 @@
+# config
+url,http://localhost:5173/
+viewport,1280x720
+setup,Clear localStorage
+timeout,10
+
+# 家庭收纳物品管理系统 Task 15 前端集成回归 E2E 场景
+# 说明：分类/位置无独立管理界面（不在前端范围），创建通过已登录 API 前置完成，UI 负责验证
+# 选择器级联与回显；通知由每日 09:00 调度器生成，E2E 会话内以测试种子数据（sql 插入 family_storage_e2e）
+# 模拟一条未读通知以验证角标（与 api-test 报告 N01-N04 降级做法一致）。
+
+# steps
+step,action,target,input,expected_result
+1,navigate,http://localhost:5173/,,未登录访问重定向到 /login
+2,url_check,/login,,登录页可见
+3,click,注册新账号,,进入注册页
+4,type,用户名 input,e2eadmin,用户名已填
+5,type,昵称 input,测试管理员,昵称已填
+6,type,密码 input,E2eTest123!,密码已填
+7,type,确认密码 input,E2eTest123!,确认密码已填
+8,click,注册 按钮,,首个账号注册成功并自动登录
+9,url_check,/,自动登录跳转首页 / 
+10,verify,统计总览,,首页统计区块可见
+11,verify,物品总数/在库总量/总价值/临期提醒/待购清单,,5 个统计卡片可见
+12,verify,暂无临期物品,,临期空态可见
+13,verify,Tabbar（首页/物品/购物/我的）,,Tabbar 四入口可见
+14,api,POST /api/categories 食品,,分类前置（无管理 UI，API 建）
+15,api,POST /api/locations 厨房橱柜+子级吊柜,,位置前置（树形/级联数据）
+16,click,新增物品 快捷入口,,进入 /items/new 表单
+17,select,分类 食品,食品,分类选择器选中并回显食品
+18,select,位置级联 厨房橱柜/吊柜,吊柜,级联选中并回显 厨房橱柜 / 吊柜
+19,type,名称/数量/单位/单价,牛奶/3/盒/5.9,,基本字段填好
+20,click,购买日期 日历确定,,购买日期回显今天
+21,click,到期日期 日历选择今天+3 并确定,,到期日期回显今天+3
+22,upload,照片 6MB 假图,,超限被拒
+23,verify,图片不能超过 5MB,,超限 toast 出现
+24,upload,照片 小 PNG,,上传成功
+25,verify,照片缩略图回显,,上传后缩略图 src 命中 /uploads 且可加载
+26,click,新增物品 提交,,提交表单
+27,url_check,/items,物品列表出现 牛奶
+28,verify,牛奶 卡片,,列表命中新增物品
+29,api,POST /api/items 洗发水（到期+10天）,,供设置阈值生效验证
+30,click,牛奶 卡片,,进入详情页
+31,verify,详情照片回显,,详情大图可加载（photoUrl 非 404）
+32,verify,数量 3盒 / 分类 食品 / 位置 厨房橱柜 / 吊柜,,详情字段正确
+33,verify,临期 到期日高亮,,临期红字高亮
+34,click,编辑 按钮,,进入编辑页回填
+35,type,数量/备注 修改,5/E2E 备注修改,,修改字段
+36,click,保存修改,,保存并回详情
+37,verify,数量 5盒 + 备注,,详情展示修改结果
+38,click,物品 Tab,,回到物品列表
+39,type,搜索 牛奶 key=Enter,,关键词命中
+40,type,搜索 不存在词 key=Enter,,空结果态
+41,verify,没有找到物品,,空结果提示
+42,type,搜索清空 key=Enter,,恢复列表
+43,click,筛选 面板选择 分类=食品 确定,,分类筛选命中
+44,click,筛选 面板开启 仅7天内临期 确定,,临期筛选仅剩 牛奶
+45,verify,洗发水 不出现且 牛奶 临期高亮,,筛选联动正确
+46,click,筛选 重置 确定,,恢复全部
+47,click,牛奶 卡片,,回详情做出入库
+48,click,出入库 → 入库 Stepper+2 确定,,入库成功
+49,verify,历史 入库 +2 且数量 7盒,,入库联动
+50,click,出入库 → 盘点调整 -99999 确定,,超存量被拒
+51,verify,库存不足…toast,,超存量报错提示
+52,click,出入库 → 出库 1 确定,,出库成功
+53,verify,历史 出库 -1 且数量 6盒,,出库联动
+54,click,购物 Tab,,进购物清单
+55,click,新增 弹层填写 洗洁精/1/瓶 添加,,缺耗品创建
+56,click,勾选 洗洁精,,置 BOUGHT
+57,verify,已购 tag,,打勾联动
+58,click,已购 Tab,,已购过滤命中
+59,click,待购 Tab,,待购空态
+60,verify,没有符合条件的缺耗品,,空态文案
+61,click,全部 Tab,,全部可见带已购标签
+62,api,seed 通知行(family_storage_e2e),,测试种子数据模拟调度产物
+63,click,首页 Tab,,回首页
+64,verify,角标未读数 1,,NavBar 未读角标出现
+65,click,我的 Tab,,进入个人中心
+66,verify,测试管理员/管理员,,用户信息回显
+67,click,修改密码 弹层 新旧+确认,,改密表单
+68,verify,密码已修改,,改密成功
+69,click,退出登录,,回到登录页
+70,url_check,/login,,退出成功
+71,type,错误密码登录,,失败分支
+72,verify,用户名或密码错误,,错误 toast
+73,type,新密码登录,,新密码登录成功
+74,url_check,/,回到首页
+75,click,用户管理（/users）,,ADMIN 成员页
+76,verify,成员管理/@e2eadmin 管理员 启用中,,列表回显
+77,click,停用管理员 Switch,,错误分支
+78,verify,不能停用管理员账户,,拦截提示
+79,click,新增成员（member1 密码留空随机）确认,,成员创建
+80,verify,@member1 启用中,,新增回显
+81,click,停用 member1 Switch,,停用
+82,verify,已停用,,状态回显; reload 后仍停用
+83,click,启用 member1 Switch,,启用
+84,verify,启用中,,状态回显
+85,click,应用设置（/settings）,,ADMIN 设置页
+86,type,临期天数 30 保存,,保存设置
+87,verify,已保存 + 提示文案更新,,设置写入
+88,api,GET /api/settings=30,,持久化生效
+89,click,首页 Tab,,回首页
+90,verify,临期提醒统计=2 项,,阈值生效（+10天物品被计入）
+91,click,我的 → 退出登录,,登出
+92,click,注册新账号（系统非空）,,注册关闭分支
+93,verify,注册已关闭…toast,,注册关闭提示
+94,verify,无 console error / pageerror / 5xx,,控制台干净
