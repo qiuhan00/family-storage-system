@@ -238,7 +238,7 @@ onMounted(async () => {
 <template>
   <div class="shopping-page">
     <div class="shopping-toolbar">
-      <van-tabs v-model:active="activeTab" shrink color="#1989fa" class="shopping-tabs">
+      <van-tabs v-model:active="activeTab" shrink color="var(--fs-primary)" class="shopping-tabs">
         <van-tab v-for="t in tabs" :key="t.name" :name="t.name" :title="t.title" />
       </van-tabs>
       <van-button size="small" icon="plus" type="primary" class="add-btn" @click="openCreate">
@@ -272,7 +272,7 @@ onMounted(async () => {
             <van-checkbox
               :model-value="row.status === 'BOUGHT'"
               shape="round"
-              checked-color="#1989fa"
+              checked-color="var(--fs-primary)"
               :disabled="row.status === 'CANCELLED'"
               aria-label="标记已购"
               @update:model-value="() => onToggle(row)"
@@ -398,7 +398,7 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #fff;
+  background: var(--fs-surface);
 }
 
 .shopping-tabs {
@@ -429,7 +429,8 @@ onMounted(async () => {
   margin-bottom: 8px;
   padding: 12px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--fs-surface);
+  box-shadow: var(--fs-shadow-sm);
 }
 
 .shop-row__main {
@@ -440,21 +441,21 @@ onMounted(async () => {
 .shop-row__name {
   font-size: 15px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .shop-row__name--done {
-  color: #969799;
+  color: var(--fs-text-3);
   text-decoration: line-through;
 }
 
 .shop-row__meta {
   margin-top: 4px;
   font-size: 12px;
-  color: #969799;
+  color: var(--fs-text-3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -473,7 +474,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   text-align: center;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .form-panel__footer {

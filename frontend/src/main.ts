@@ -1,4 +1,5 @@
 // src/main.ts —— 前端入口：挂载 App、Pinia、路由。
+import './styles/global.css';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';

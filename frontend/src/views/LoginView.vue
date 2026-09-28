@@ -83,7 +83,7 @@ const goRegister = () => router.push('/register');
   min-height: 100vh;
   padding: 20vh 0 24px;
   box-sizing: border-box;
-  background: #f7f8fa;
+  background: var(--fs-bg);
 }
 .auth-title {
   text-align: center;
@@ -92,19 +92,19 @@ const goRegister = () => router.push('/register');
 .auth-title h1 {
   margin: 0 0 8px;
   font-size: 26px;
-  color: #1989fa;
+  color: var(--fs-primary);
 }
 .auth-title p {
   margin: 0;
   font-size: 14px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 .auth-actions {
   margin: 24px 16px 0;
 }
 .auth-register {
   margin-top: 12px;
-  border-color: #1989fa;
-  color: #1989fa;
+  border-color: var(--fs-primary);
+  color: var(--fs-primary);
 }
 </style>

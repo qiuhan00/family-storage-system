@@ -306,8 +306,8 @@ watch(itemId, (v) => {
   justify-content: center;
   height: 200px;
   border-radius: 8px;
-  background: #fff;
-  color: #c8c9cc;
+  background: var(--fs-surface);
+  color: var(--fs-text-3);
   font-size: 13px;
 }
 
@@ -318,7 +318,7 @@ watch(itemId, (v) => {
 .detail-head__name {
   font-size: 18px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .detail-head__expiry {
@@ -327,12 +327,12 @@ watch(itemId, (v) => {
 }
 
 .detail-head__expiry--red {
-  color: #ee0a24;
+  color: var(--fs-danger);
   font-weight: 600;
 }
 
 .detail-head__expiry--orange {
-  color: #ff976a;
+  color: var(--fs-warning);
   font-weight: 600;
 }
 
@@ -345,28 +345,28 @@ watch(itemId, (v) => {
   padding: 0 16px 8px;
   font-size: 15px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .history-type {
   font-size: 14px;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .history-note {
   display: block;
   margin-top: 2px;
   font-size: 12px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .history-qty--in {
-  color: #07c160;
+  color: var(--fs-success);
   font-weight: 600;
 }
 
 .history-qty--out {
-  color: #ee0a24;
+  color: var(--fs-danger);
   font-weight: 600;
 }
 
@@ -387,6 +387,6 @@ watch(itemId, (v) => {
 .stock-dialog__hint {
   margin-bottom: 12px;
   font-size: 13px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 </style>

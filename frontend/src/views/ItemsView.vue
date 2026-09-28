@@ -264,7 +264,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   padding: 8px 12px 0;
-  background: #fff;
+  background: var(--fs-surface);
 }
 
 .items-toolbar .van-search {
@@ -291,7 +291,8 @@ onMounted(async () => {
   margin-bottom: 8px;
   padding: 12px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--fs-surface);
+  box-shadow: var(--fs-shadow-sm);
 }
 
 .item-card__main {
@@ -301,13 +302,13 @@ onMounted(async () => {
 .item-card__name {
   font-size: 15px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .item-card__meta {
   margin-top: 4px;
   font-size: 12px;
-  color: #969799;
+  color: var(--fs-text-3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -316,7 +317,7 @@ onMounted(async () => {
 .item-card__remark {
   margin-top: 4px;
   font-size: 12px;
-  color: #969799;
+  color: var(--fs-text-3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -330,14 +331,14 @@ onMounted(async () => {
 .item-card__qty {
   font-size: 18px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .item-card__unit {
   margin-left: 2px;
   font-size: 12px;
   font-weight: 400;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .item-card__expiry {
@@ -346,12 +347,12 @@ onMounted(async () => {
 }
 
 .item-card__expiry--red {
-  color: #ee0a24;
+  color: var(--fs-danger);
   font-weight: 600;
 }
 
 .item-card__expiry--orange {
-  color: #ff976a;
+  color: var(--fs-warning);
   font-weight: 600;
 }
 
@@ -360,7 +361,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   text-align: center;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .filter-panel__body {
@@ -376,7 +377,7 @@ onMounted(async () => {
 .filter-group__label {
   margin-bottom: 6px;
   font-size: 13px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .filter-options {

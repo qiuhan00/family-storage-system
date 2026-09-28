@@ -171,7 +171,7 @@ onMounted(() => {
 .home-section {
   margin-bottom: 8px;
   padding: 4px 0;
-  background: #fff;
+  background: var(--fs-surface);
 }
 
 .section-title {
@@ -179,7 +179,7 @@ onMounted(() => {
   padding: 12px 16px 4px;
   font-size: 16px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .block-loading {
@@ -196,34 +196,34 @@ onMounted(() => {
 }
 
 .stat-card {
-  border: 1px solid #ebedf0;
+  border: 1px solid var(--fs-border);
   border-radius: 8px;
   padding: 12px;
-  background: #f7f8fa;
+  background: var(--fs-surface-soft);
 }
 
 .stat-card--warning {
-  border-color: #ff976a;
-  background: #fff7f2;
+  border-color: var(--fs-warning);
+  background: var(--fs-warning-soft);
 }
 
 .stat-card__value {
   font-size: 22px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .stat-card__suffix {
   margin-left: 2px;
   font-size: 12px;
   font-weight: 400;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .stat-card__label {
   margin-top: 4px;
   font-size: 13px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .dim-collapse {

@@ -136,7 +136,7 @@ onMounted(() => {
 
 .settings-hint {
   font-size: 12px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .settings-save {

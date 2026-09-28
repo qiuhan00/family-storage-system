@@ -89,7 +89,7 @@ onMounted(async () => {
     <!-- 用户信息卡 -->
     <div class="profile-card">
       <div class="profile-card__avatar">
-        <van-icon name="user-circle-o" size="48" color="#1989fa" />
+        <van-icon name="user-circle-o" size="48" color="var(--fs-primary)" aria-hidden="true" />
       </div>
       <div class="profile-card__info">
         <div class="profile-card__name">{{ displayName }}</div>
@@ -166,7 +166,8 @@ onMounted(async () => {
   margin: 0 12px 12px;
   padding: 20px 16px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--fs-surface);
+  box-shadow: var(--fs-shadow-sm);
 }
 
 .profile-card__info {
@@ -176,13 +177,13 @@ onMounted(async () => {
 .profile-card__name {
   font-size: 18px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .profile-card__meta {
   margin-top: 4px;
   font-size: 13px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .profile-group {
@@ -190,7 +191,7 @@ onMounted(async () => {
 }
 
 .profile-group--admin .van-cell {
-  color: #1989fa;
+  color: var(--fs-primary);
 }
 
 .profile-logout {
@@ -202,7 +203,7 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: 600;
   text-align: center;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .pwd-panel__footer {

@@ -35,7 +35,16 @@ function goBack() {
   <div class="layout-root">
     <van-nav-bar :title="pageTitle" fixed placeholder>
       <template #left>
-        <van-icon v-if="showBack" name="arrow-left" size="20" @click="goBack" />
+        <van-icon
+          v-if="showBack"
+          name="arrow-left"
+          size="20"
+          role="button"
+          tabindex="0"
+          aria-label="返回"
+          @click="goBack"
+          @keyup.enter="goBack"
+        />
       </template>
       <template #right>
         <NotificationBadge />
@@ -46,7 +55,7 @@ function goBack() {
       <router-view />
     </main>
 
-    <van-tabbar route fixed placeholder active-color="#1989fa">
+    <van-tabbar route fixed placeholder active-color="var(--fs-primary)">
       <van-tabbar-item replace :to="{ name: 'home' }" icon="wap-home-o">首页</van-tabbar-item>
       <van-tabbar-item replace to="/items" icon="apps-o">物品</van-tabbar-item>
       <van-tabbar-item replace to="/shopping" icon="cart-o">购物</van-tabbar-item>
@@ -58,7 +67,7 @@ function goBack() {
 <style scoped>
 .layout-root {
   min-height: 100vh;
-  background: #f7f8fa;
+  background: var(--fs-bg);
 }
 .layout-content {
   /* NavBar(46px) 与 Tabbar(50px) 均已用 placeholder 占位，这里留一点底部呼吸空间 */

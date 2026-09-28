@@ -322,20 +322,20 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px;
-  background: #fff;
+  background: var(--fs-surface);
 }
 
 .users-toolbar__title {
   font-size: 15px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .users-toolbar__count {
   margin-left: 6px;
   font-size: 12px;
   font-weight: 400;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .user-list {
@@ -350,7 +350,8 @@ onMounted(() => {
   margin-bottom: 8px;
   padding: 12px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--fs-surface);
+  box-shadow: var(--fs-shadow-sm);
 }
 
 .user-card__info {
@@ -360,7 +361,7 @@ onMounted(() => {
 .user-card__name {
   font-size: 15px;
   font-weight: 600;
-  color: #323233;
+  color: var(--fs-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -373,7 +374,7 @@ onMounted(() => {
 .user-card__meta {
   margin-top: 4px;
   font-size: 12px;
-  color: #969799;
+  color: var(--fs-text-3);
 }
 
 .user-card__ops {
@@ -389,13 +390,13 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 600;
   text-align: center;
-  color: #323233;
+  color: var(--fs-text);
 }
 
 .panel__desc {
   padding: 4px 16px 8px;
   font-size: 12px;
-  color: #969799;
+  color: var(--fs-text-3);
   text-align: center;
 }
 
