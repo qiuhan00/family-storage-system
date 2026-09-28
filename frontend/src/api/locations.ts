@@ -9,6 +9,9 @@ export interface FlatLocation {
   path: string;
   depth: number;
   parentId: number | null;
+  sortOrder: number;
+  description: string | null;
+  imageUrl: string | null;
 }
 
 /** 将位置树按深度优先展平为带全路径的列表（筛选列表与选择器共用）。 */
@@ -16,7 +19,16 @@ export function flattenLocations(nodes: Location[], prefix = '', depth = 0): Fla
   const out: FlatLocation[] = [];
   for (const node of nodes) {
     const path = prefix ? `${prefix} / ${node.name}` : node.name;
-    out.push({ id: node.id, name: node.name, path, depth, parentId: node.parentId });
+    out.push({
+      id: node.id,
+      name: node.name,
+      path,
+      depth,
+      parentId: node.parentId,
+      sortOrder: node.sortOrder,
+      description: node.description ?? null,
+      imageUrl: node.imageUrl ?? null,
+    });
     if (node.children?.length) out.push(...flattenLocations(node.children, path, depth + 1));
   }
   return out;

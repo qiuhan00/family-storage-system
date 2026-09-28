@@ -53,10 +53,12 @@
 
 | 方法 | 路径 | 说明 | 关键字段 | 业务错误码 |
 |---|---|---|---|---|
-| GET | `/api/locations` | **树形**列表（含 `GET /api/locations/{id}` 详情） | `LocationResponse`：`{id, name, parentId, sortOrder, children[]}` | 404 `LOCATION_NOT_FOUND` |
-| POST | `/api/locations` | 新增；`parentId` 为 null 表示根节点 | `{name, parentId?, sortOrder}` | 404 `LOCATION_NOT_FOUND`（父位置不存在）；400 `LOCATION_CYCLE` |
+| GET | `/api/locations` | **树形**列表（含 `GET /api/locations/{id}` 详情） | `LocationResponse`：`{id, name, parentId, sortOrder, description?, imageUrl?, children[]}` | 404 `LOCATION_NOT_FOUND` |
+| POST | `/api/locations` | 新增；`parentId` 为 null 表示根节点 | `{name, parentId?, sortOrder, description?, imageUrl?}`（`description` ≤500 字，`imageUrl` 由 `POST /api/files` 上传后回填） | 404 `LOCATION_NOT_FOUND`（父位置不存在）；400 `LOCATION_CYCLE` |
 | PUT | `/api/locations/{id}` | 更新 | 请求同新增 | 400 `LOCATION_CYCLE`；404 `LOCATION_NOT_FOUND` |
 | DELETE | `/api/locations/{id}` | 删除；有物品引用或子级时拒绝 | — | 400 `LOCATION_IN_USE`、`LOCATION_HAS_CHILDREN`；404 `LOCATION_NOT_FOUND` |
+
+> 图片口径（code-review Y3/Y4）：`imageUrl` 服务端校验格式 `^/(?!/)(?!.*\.\.)[A-Za-z0-9._/-]{1,254}$`（即仅接受 `POST /api/files` 返回的站内路径如 `/uploads/202609/uuid.jpg`，拒绝外链、`//` 协议相对 URL 与 `..` 路径段），违反返回 400 `VALIDATION_ERROR`；**删除位置不级联删除其图片文件**（与物品 `photoUrl` 口径一致），未被引用的上传文件由前端在保存成功/取消关闭表单时调用 `DELETE /api/files/{name}` 清理，清理失败容忍为孤悬文件。
 
 ## 5.4 物品 Items
 
@@ -85,7 +87,7 @@
 | 方法 | 路径 | 说明 | 关键字段 | 业务错误码 |
 |---|---|---|---|---|
 | POST | `/api/files` | multipart 上传（字段 `file`），限 jpg/jpeg/png/webp ≤5MB | 响应 `{url}`，如 `/uploads/202609/uuid.png`（nginx 托管 `/uploads`） | 400 `EMPTY_FILE`、`INVALID_FILE_TYPE`、`FILE_TOO_LARGE`；500 `FILE_STORE_FAILED` |
-| DELETE | `/api/files/{name}` | 删除已上传文件，`name` 为相对路径（如 `202609/uuid.png`） | — | 400 `INVALID_FILE_PATH`；500 `FILE_DELETE_FAILED` |
+| DELETE | `/api/files/{name}` | 删除已上传文件，`name` 为相对路径（如 `202609/uuid.png`）；目标不存在时按**幂等语义返回 204**（不报错） | — | 400 `INVALID_FILE_PATH`；500 `FILE_DELETE_FAILED` |
 
 ## 5.7 通知 Notifications
 

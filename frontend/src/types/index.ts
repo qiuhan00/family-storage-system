@@ -97,6 +97,8 @@ export interface Location {
   name: string;
   parentId: number | null;
   sortOrder: number;
+  description?: string | null;
+  imageUrl?: string | null;
   children: Location[];
 }
 
@@ -193,4 +195,6 @@ export interface LocationPayload {
   name: string;
   parentId?: number | null;
   sortOrder?: number;
+  description?: string | null;
+  imageUrl?: string | null;
 }

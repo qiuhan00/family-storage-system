@@ -17,6 +17,7 @@ const titles: Record<string, string> = {
   profile: '我的',
   users: '用户管理',
   settings: '应用设置',
+  locations: '位置管理',
 };
 
 const pageTitle = computed(() => titles[String(route.name)] ?? '家庭收纳');

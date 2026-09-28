@@ -58,6 +58,8 @@ public class LocationService {
         l.setName(req.name());
         l.setParentId(req.parentId());
         l.setSortOrder(req.sortOrder());
+        l.setDescription(req.description());
+        l.setImageUrl(req.imageUrl());
         return toFlatResponse(locationRepository.save(l));
     }
 
@@ -67,6 +69,8 @@ public class LocationService {
         l.setName(req.name());
         l.setParentId(req.parentId());
         l.setSortOrder(req.sortOrder());
+        l.setDescription(req.description());
+        l.setImageUrl(req.imageUrl());
         return toFlatResponse(locationRepository.save(l));
     }
 
@@ -119,11 +123,13 @@ public class LocationService {
         for (Location c : byParent.getOrDefault(l.getId(), List.of())) {
             children.add(toResponse(c, byParent));
         }
-        return new LocationResponse(l.getId(), l.getName(), l.getParentId(), l.getSortOrder(), children);
+        return new LocationResponse(l.getId(), l.getName(), l.getParentId(), l.getSortOrder(),
+                l.getDescription(), l.getImageUrl(), children);
     }
 
     private LocationResponse toFlatResponse(Location l) {
-        return new LocationResponse(l.getId(), l.getName(), l.getParentId(), l.getSortOrder(), List.of());
+        return new LocationResponse(l.getId(), l.getName(), l.getParentId(), l.getSortOrder(),
+                l.getDescription(), l.getImageUrl(), List.of());
     }
 
     private Stream<LocationResponse> flatten(LocationResponse node) {

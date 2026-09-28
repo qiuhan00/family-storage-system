@@ -1,0 +1,5 @@
+STEP1 create photo1= b1c82149-84f4-4aae-99ec-09ba03db1661.png fileDeletes= []
+STEP2 cancel fileDeletes= ["202609/ba25616f-5fb3-4d23-85bb-4b9ef6f37528.png"] expect=[ ba25616f-5fb3-4d23-85bb-4b9ef6f37528.png ] photo1_GET= 200 (want 200) photo2_GET= 500 (want !=200)
+STEP3 save fileDeletes= ["202609/ba25616f-5fb3-4d23-85bb-4b9ef6f37528.png","202609/b1c82149-84f4-4aae-99ec-09ba03db1661.png"] photo1_GET= 500 (want !=200) photo3_GET= 200 (want 200) rowThumb= 22e401ce-fbcf-4de5-8ece-89929b2ef78c.png
+SUMMARY PASS
+CLEANUP locationLeft= 0 photo3_file_removed= true

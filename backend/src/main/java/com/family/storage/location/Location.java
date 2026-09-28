@@ -27,6 +27,12 @@ public class Location {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder = 0;
 
+    @Column(length = 500)
+    private String description;
+
+    @Column(name = "image_url", length = 255)
+    private String imageUrl;
+
     public Long getId() {
         return id;
     }
@@ -57,5 +63,21 @@ public class Location {
 
     public void setSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

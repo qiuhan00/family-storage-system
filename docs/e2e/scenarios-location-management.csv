@@ -1,0 +1,51 @@
+# config
+url,http://localhost:5173/
+viewport,375x667
+setup,Clear localStorage
+timeout,10
+
+# 家庭收纳系统 · 「位置管理」页面 E2E 场景清单（E-LM-01 .. E-LM-10）
+# 前置：隔离库 family_storage_e2e 已重置为空（users=0 / locations=0 / items=0），Flyway V1-V3 已应用。
+# 说明：
+#   - E-LM-01 注册的账号沿用既有回归口径（e2eadmin / E2eTest123! / 昵称 测试管理员），
+#     以便同一隔离库上继续执行既有 family-storage 全量回归（注册关闭 → 登录回退路径）。
+#   - 校验/上传类分支均在前端完成（beforeRead / max-size），断言「无对应网络请求」。
+#   - 删除保护走后端 400 LOCATION_HAS_CHILDREN / LOCATION_IN_USE → apiErrorMessage 中文文案。
+
+# steps
+step,action,target,input,expected_result
+1,navigate,http://localhost:5173/,,未登录访问重定向到 /login
+2,click,注册新账号,,进入注册页 /register
+3,type,用户名/昵称/密码/确认密码,e2eadmin / 测试管理员 / E2eTest123!,注册表单填好
+4,click,注册 按钮,,E-LM-01 空库首账号注册成功并自动登录进入首页
+5,verify,统计总览 + Tabbar,,首页可见（登录态建立）
+6,click,我的 Tab,,进入个人中心 /profile
+7,verify,位置管理 cell（title=位置管理 label=新增位置 / 填写说明与照片）,,入口存在且文案正确
+8,click,位置管理 cell,,跳转 /locations，NavBar 标题=位置管理，左侧返回键可见
+9,click,返回键,,返回我的页 /profile
+10,click,位置管理 cell,,再次进入 /locations
+11,verify,共 0 个位置 + 空态提示,,E-LM-03 空态：0 个位置 / 暂无位置，点击右上角新增
+12,click,新增位置,,底部弹层「新增位置」打开
+13,verify,名称（必填）/ 父级位置=根节点 / 说明 textarea maxlength=500 有 0/500 字数统计 / 位置照片上传,,弹层字段齐全
+14,click,保存（名称留空）,,E-LM-04 校验：提示「请输入位置名称」且不发 POST /api/locations
+15,type,名称=厨房 说明=吊柜顶层放干货,,填写根位置
+16,click,保存,,E-LM-05 toast「已保存」，列表出现 厨房 且说明摘要显示，工具栏=共 1 个位置
+17,click,新增位置 名称=吊柜 父级位置=厨房,,E-LM-06 通过父级选择弹层把父级改为厨房
+18,click,保存,,子位置创建成功，共 2 个位置
+19,verify,列表缩进,,厨房 paddingLeft=12px、吊柜 paddingLeft=28px（depth 缩进）
+20,click,厨房 行 编辑,,编辑弹层回填 名称=厨房、说明=吊柜顶层放干货
+21,type,说明=一层台面放锅具 保存,,E-LM-07 toast「已保存」，列表摘要更新为 一层台面放锅具
+22,upload,位置照片 6MB 假 png,,E-LM-08a oversize toast「图片不能超过 5MB」，不发请求
+23,upload,位置照片 note.txt,,E-LM-08b beforeRead 拒绝 toast「仅支持 jpg/jpeg/png/webp 图片」，不发请求
+24,upload,位置照片 tiny.png,,E-LM-08c 上传成功，弹层缩略图回显 /uploads/ 且可加载
+25,click,保存,,厨房行出现 44px 缩略图（src=/uploads/ 且可加载）
+26,click,厨房 行 编辑,,编辑弹层回显已保存的照片缩略图；取消关闭
+27,upload,吊柜 行 编辑 → tiny.jpg 保存,,E-LM-08d jpg 上传成功，吊柜行出现缩略图
+28,api,POST /api/categories + POST /api/items（挂吊柜）,,为删除保护准备「位置下有物品」前置（无独立物品前置 UI）
+29,click,厨房 行 删除 → 确认,,E-LM-09a 有子级删除被拒：toast「该位置下仍有子位置，请先删除子位置」，列表仍 2 行
+30,click,吊柜 行 删除 → 确认,,E-LM-09b 有物品删除被拒：toast「该位置下仍有物品，请先迁移或删除物品」，列表仍 2 行
+31,api,DELETE /api/items/{id},,移除物品前置，让子位置可删
+32,click,吊柜 行 删除 → 确认,,E-LM-09c toast「已删除」，共 1 个位置
+33,click,厨房 行 删除 → 确认,,E-LM-09d toast「已删除」，回到空态 共 0 个位置
+34,api,DELETE /api/files/{name} ×2,,清理本次上传的照片文件（不残留）
+35,verify,无 pageerror / 5xx / 未预期 4xx / failed 请求,,E-LM-10 控制台与网络清扫（预期 400 删除保护已放行）
