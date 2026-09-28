@@ -22,6 +22,7 @@ function dayNum(offsetDays) {
   d.setDate(d.getDate() + offsetDays);
   return d.getDate();
 }
+// 说明：dayNum 仅作调试/参考保留，日历选点请统一走 pickCalendarDate（按月份节点定位）。
 
 // ---------- 证据截图 ----------
 let shotSeq = 0;
@@ -90,6 +91,35 @@ const dialogConfirm = (page) => page.locator('.van-dialog:visible').getByRole('b
 // van-picker 的确认是 div（非 button）；筛选弹层/日历确认是 van-button
 const pickerConfirm = (page) => page.locator('.van-picker:visible .van-picker__confirm');
 const popupConfirm = (page) => page.locator('.van-popup:visible').getByRole('button', { name: '确定' });
+
+// ---------- 日历选日期（按「月份节点 + 日」精确定位） ----------
+// vant Calendar 在未显式 min-date 时默认 minDate=今天、maxDate=今天+6 个月，
+// 且同时渲染 6 个 .van-calendar__month 节点（首月无 month-title，用 sticky header）。
+// 因此仅按「日」匹配并取 first() 会跨月误命中（如今天 09-28、到期日 +3=10-01 时
+// 命中的是 9-01，而该格被 minDate 禁用 → 点击无效 → vant 确认回填「今天」）。
+async function pickCalendarDate(page, nth, dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const monthLabel = `${y}年${m}月`; // vant month-title 形如 "2026年10月"（月不补零）
+  const today = new Date();
+  const currentLabel = `${today.getFullYear()}年${today.getMonth() + 1}月`;
+  await page.getByPlaceholder('选择日期').nth(nth).click();
+  const cal = page.locator('.van-calendar:visible');
+  await expect(cal).toBeVisible();
+  // 节点 0 = 当前月（无 month-title，标题在 sticky header）；节点 i>=1 的标题 = titles[i-1]
+  const titles = (await cal.locator('.van-calendar__month-title').allInnerTexts()).map((s) => s.replace(/\s/g, ''));
+  let nodeIdx = 0;
+  if (monthLabel !== currentLabel) {
+    const found = titles.indexOf(monthLabel);
+    expect(found, `日历中未找到 ${monthLabel}（可见月份=${JSON.stringify(titles)}）`).toBeGreaterThan(-1);
+    nodeIdx = found + 1;
+  }
+  const cell = cal.locator('.van-calendar__month').nth(nodeIdx).locator('.van-calendar__day').filter({ hasText: new RegExp(`^${d}$`) }).first();
+  // 该日必须在 minDate(今天) 之后可选，否则点击会被静默忽略
+  expect(await cell.evaluate((el) => !el.className.includes('--disabled')), `${dateStr} 在日历中不可选（被 minDate 禁用）`).toBe(true);
+  await cell.click();
+  await cal.locator('.van-calendar__confirm').click();
+  await expect(page.getByPlaceholder('选择日期').nth(nth)).toHaveValue(dateStr);
+}
 
 test('family-storage task15 full regression', async ({ page }) => {
   // 控制台 / 网络异常收集（`consoleErrors` 最终断言）
@@ -175,17 +205,11 @@ test('family-storage task15 full regression', async ({ page }) => {
   await page.getByPlaceholder('如：件 / 瓶').fill('盒');
   await page.getByPlaceholder('可选').first().fill('5.9');
 
-  // 购买日期 = 今天（日历点今天再确定）
-  await page.getByPlaceholder('选择日期').first().click();
-  await page.locator('.van-calendar:visible .van-calendar__day').filter({ hasText: new RegExp(`^${dayNum(0)}$`) }).first().click();
-  await page.locator('.van-calendar:visible .van-calendar__confirm').click();
-  await expect(page.getByPlaceholder('选择日期').first()).toHaveValue(ymd(0));
+  // 购买日期 = 今天（Vant 默认 minDate=今天，今天可选）
+  await pickCalendarDate(page, 0, ymd(0));
 
-  // 到期日期 = 今天+3
-  await page.getByPlaceholder('选择日期').nth(1).click();
-  await page.locator('.van-calendar:visible .van-calendar__day').filter({ hasText: new RegExp(`^${dayNum(3)}$`) }).first().click();
-  await page.locator('.van-calendar:visible .van-calendar__confirm').click();
-  await expect(page.getByPlaceholder('选择日期').nth(1)).toHaveValue(ymd(3));
+  // 到期日期 = 今天+3（跨月时按月份节点定位，避免误命中本月已禁用的同日）
+  await pickCalendarDate(page, 1, ymd(3));
   await shot(page, 'item-form-dates');
 
   // 照片：先验证 6MB 假图被拒（客户端 max-size 校验）
@@ -294,8 +318,10 @@ test('family-storage task15 full regression', async ({ page }) => {
   await dialogConfirm(page).click();
   await expect(page.getByText('已更新库存')).toBeVisible();
   await expect(page.locator('.van-cell', { hasText: /^数量/ })).toContainText('7盒');
-  await expect(page.getByText(/入库 · /)).toBeVisible();
-  await expect(page.getByText('+2')).toBeVisible();
+  // 定位到「入库」那一条历史记录内断言数量（避免 getByText('+2/-1') 命中页面其他文本，如「临期 2026-10-01」含 "-1"）
+  const inRow = page.locator('.van-cell', { hasText: /入库 · / }).first();
+  await expect(inRow).toBeVisible();
+  await expect(inRow.locator('.history-qty--in')).toHaveText('+2');
   await shot(page, 'history-after-in');
 
   // 超存量报错（盘点调整 -99999 使库存为负）
@@ -314,8 +340,9 @@ test('family-storage task15 full regression', async ({ page }) => {
   await dialogConfirm(page).click();
   await expect(page.getByText('已更新库存')).toBeVisible();
   await expect(page.locator('.van-cell', { hasText: /^数量/ })).toContainText('6盒');
-  await expect(page.getByText(/出库 · /)).toBeVisible();
-  await expect(page.getByText('-1')).toBeVisible();
+  const outRow = page.locator('.van-cell', { hasText: /出库 · / }).first();
+  await expect(outRow).toBeVisible();
+  await expect(outRow.locator('.history-qty--out')).toHaveText('-1');
   await shot(page, 'history-after-out');
 
   // ================= 购物：新增 → BOUGHT → Tab 过滤 =================
