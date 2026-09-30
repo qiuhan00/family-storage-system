@@ -3,21 +3,22 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import dayjs from 'dayjs';
 import { showToast } from 'vant/es/toast';
 import 'vant/es/toast/style';
 import { itemsApi } from '../api/items';
 import { categoriesApi } from '../api/categories';
 import { locationsApi, flattenLocations } from '../api/locations';
+import { settingsApi } from '../api/settings';
+import { expiryLevel } from '../utils/expiry';
 import type { FlatLocation } from '../api/locations';
 import type { Category, Item } from '../types';
 
 const PAGE_SIZE = 20;
-/** 临期高亮阈值：≤7 天（含已过期）红色，其余临期窗口（≤30 天）橙色。 */
-const RED_DAYS = 7;
-const ORANGE_DAYS = 30;
 
 const router = useRouter();
+
+/** 临期阈值（天）：GET /api/settings 的 expiry_remind_days，驱动角标与筛选文案（F2）。 */
+const remindDays = ref(7);
 
 interface FilterDraft {
   categoryId: number | '';
@@ -117,20 +118,6 @@ function resetDraft() {
 }
 
 // --- 展示辅助 ---
-type ExpiryLevel = 'red' | 'orange' | 'none';
-
-function expiryDays(date: string): number {
-  return dayjs(date).startOf('day').diff(dayjs().startOf('day'), 'day');
-}
-
-function expiryLevel(date: string | null): ExpiryLevel {
-  if (!date) return 'none';
-  const days = expiryDays(date);
-  if (days <= RED_DAYS) return 'red';
-  if (days <= ORANGE_DAYS) return 'orange';
-  return 'none';
-}
-
 function categoryName(id: number): string {
   return categories.value.find((c) => c.id === id)?.name ?? '';
 }
@@ -148,12 +135,14 @@ function goCreate() {
 }
 
 onMounted(async () => {
-  const [cats, tree] = await Promise.all([
+  const [cats, tree, threshold] = await Promise.all([
     categoriesApi.list().catch(() => [] as Category[]),
     locationsApi.getTree().catch(() => []),
+    settingsApi.get().then((s) => s.expiry_remind_days).catch(() => null),
   ]);
   categories.value = cats;
   flatLocations.value = flattenLocations(tree);
+  if (threshold != null) remindDays.value = threshold;
   void reload();
 });
 </script>
@@ -190,9 +179,8 @@ onMounted(async () => {
                 {{ item.quantity }}<span v-if="item.unit" class="item-card__unit">{{ item.unit }}</span>
               </div>
               <div
-                v-if="expiryLevel(item.expiryDate) !== 'none'"
-                class="item-card__expiry"
-                :class="`item-card__expiry--${expiryLevel(item.expiryDate)}`"
+                v-if="expiryLevel(item.expiryDate, remindDays) === 'red'"
+                class="item-card__expiry item-card__expiry--red"
               >
                 临期 {{ item.expiryDate }}
               </div>
@@ -232,7 +220,7 @@ onMounted(async () => {
             </van-radio-group>
           </div>
 
-          <van-cell title="仅看 7 天内临期" :border="false">
+          <van-cell :title="`仅看 ${remindDays} 天内临期`" :border="false">
             <template #right-icon>
               <van-switch v-model="draft.expiring" size="22" />
             </template>
@@ -348,11 +336,6 @@ onMounted(async () => {
 
 .item-card__expiry--red {
   color: var(--fs-danger);
-  font-weight: 600;
-}
-
-.item-card__expiry--orange {
-  color: var(--fs-warning);
   font-weight: 600;
 }
 

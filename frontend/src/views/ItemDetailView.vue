@@ -14,16 +14,18 @@ import { apiErrorMessage } from '../api/http';
 import { itemsApi } from '../api/items';
 import { categoriesApi } from '../api/categories';
 import { locationsApi, flattenLocations } from '../api/locations';
+import { settingsApi } from '../api/settings';
+import { expiryLevel } from '../utils/expiry';
 import type { FlatLocation } from '../api/locations';
 import type { Category, Item, StockChange } from '../types';
 
 const route = useRoute();
 const router = useRouter();
 
-const RED_DAYS = 7;
-const ORANGE_DAYS = 30;
-
 const itemId = computed(() => Number(route.params.id));
+
+/** 临期阈值（天）：GET /api/settings 的 expiry_remind_days，驱动详情角标（F2）。 */
+const remindDays = ref(7);
 
 const item = ref<Item | null>(null);
 const history = ref<StockChange[]>([]);
@@ -38,14 +40,6 @@ function categoryName(id: number): string {
 
 function locationPath(id: number): string {
   return flatLocations.value.find((l) => l.id === id)?.path ?? '';
-}
-
-function expiryLevel(date: string | null): 'red' | 'orange' | 'none' {
-  if (!date) return 'none';
-  const days = dayjs(date).startOf('day').diff(dayjs().startOf('day'), 'day');
-  if (days <= RED_DAYS) return 'red';
-  if (days <= ORANGE_DAYS) return 'orange';
-  return 'none';
 }
 
 const statusLabel: Record<string, string> = { ACTIVE: '在库', ARCHIVED: '已归档' };
@@ -176,12 +170,14 @@ async function onStockDialogBeforeClose(action: string): Promise<boolean> {
 }
 
 onMounted(async () => {
-  const [cats, tree] = await Promise.all([
+  const [cats, tree, threshold] = await Promise.all([
     categoriesApi.list().catch(() => [] as Category[]),
     locationsApi.getTree().catch(() => []),
+    settingsApi.get().then((s) => s.expiry_remind_days).catch(() => null),
   ]);
   categories.value = cats;
   flatLocations.value = flattenLocations(tree);
+  if (threshold != null) remindDays.value = threshold;
   await loadAll();
 });
 
@@ -213,9 +209,8 @@ watch(itemId, (v) => {
       <div class="detail-head">
         <div class="detail-head__name">{{ item.name }}</div>
         <div
-          v-if="expiryLevel(item.expiryDate) !== 'none'"
-          class="detail-head__expiry"
-          :class="`detail-head__expiry--${expiryLevel(item.expiryDate)}`"
+          v-if="expiryLevel(item.expiryDate, remindDays) === 'red'"
+          class="detail-head__expiry detail-head__expiry--red"
         >
           临期 {{ item.expiryDate }}
         </div>
@@ -328,11 +323,6 @@ watch(itemId, (v) => {
 
 .detail-head__expiry--red {
   color: var(--fs-danger);
-  font-weight: 600;
-}
-
-.detail-head__expiry--orange {
-  color: var(--fs-warning);
   font-weight: 600;
 }
 

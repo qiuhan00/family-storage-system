@@ -45,7 +45,8 @@ public class ExpiryReminderScheduler {
 
     @Scheduled(cron = "0 0 9 * * *")
     public void scanAndNotify() {
-        int days = settingsService.getInt("expiry.remind.days", 7);
+        int days = settingsService.getInt(SettingsService.EXPIRY_REMIND_DAYS,
+                SettingsService.DEFAULT_EXPIRY_REMIND_DAYS);
         LocalDate today = LocalDate.now();
         LocalDate limit = today.plusDays(days);
         List<Item> expiring = itemRepository

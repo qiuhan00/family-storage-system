@@ -6,12 +6,14 @@ import { showToast } from 'vant/es/toast';
 import 'vant/es/toast/style';
 import { statisticsApi } from '../api/statistics';
 import { itemsApi } from '../api/items';
+import { settingsApi } from '../api/settings';
 import type { Item } from '../types';
 import type { ItemCountByDimension, Summary } from '../types';
 
-const REMIND_DAYS = 7;
-
 const router = useRouter();
+
+/** 临期阈值（天）：来自 GET /api/settings 的 expiry_remind_days，失败退默认 7——与统计卡同一口径。 */
+const remindDays = ref(7);
 
 const summary = ref<Summary | null>(null);
 const expiringItems = ref<Item[]>([]);
@@ -52,7 +54,9 @@ async function loadSummary() {
 async function loadExpiring() {
   loadingExpiring.value = true;
   try {
-    expiringItems.value = await itemsApi.expiring(REMIND_DAYS);
+    const s = await settingsApi.get().catch(() => null);
+    if (s) remindDays.value = s.expiry_remind_days;
+    expiringItems.value = await itemsApi.expiring(remindDays.value);
   } catch {
     showToast('临期物品加载失败，请稍后重试');
   } finally {
@@ -112,7 +116,7 @@ onMounted(() => {
 
     <!-- 临期物品 -->
     <section class="home-section">
-      <h2 class="section-title">临期提醒（7 天内）</h2>
+      <h2 class="section-title">临期提醒（{{ remindDays }} 天内）</h2>
       <div v-if="loadingExpiring" class="block-loading">
         <van-loading size="24">加载中…</van-loading>
       </div>

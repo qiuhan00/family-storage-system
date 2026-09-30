@@ -42,7 +42,7 @@ public class ItemController {
     }
 
     @GetMapping("/expiring")
-    public List<ItemResponse> expiringList(@RequestParam(defaultValue = "7") int days) {
+    public List<ItemResponse> expiringList(@RequestParam(required = false) Integer days) {
         return itemService.expiringList(days);
     }
 

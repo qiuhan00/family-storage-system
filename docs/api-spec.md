@@ -64,8 +64,8 @@
 
 | 方法 | 路径 | 说明 | 关键字段 | 业务错误码 |
 |---|---|---|---|---|
-| GET | `/api/items` | 分页检索：`keyword`（对 `name` LIKE 模糊）、`categoryId`、`locationId`、`status`(ACTIVE/ARCHIVED)、`expiring=1` | 响应 `PageResponse<ItemResponse>` | 400 `INVALID_STATUS`；401 |
-| GET | `/api/items/expiring` | 临期物品列表（默认 7 天，可用 `days` 覆盖） | 响应 `ItemResponse[]` | — |
+| GET | `/api/items` | 分页检索：`keyword`（对 `name` LIKE 模糊）、`categoryId`、`locationId`、`status`(ACTIVE/ARCHIVED)、`expiring=1`（临期窗口 = `expiry.remind.days` 阈值，与统计/调度同口径，F2） | 响应 `PageResponse<ItemResponse>` | 400 `INVALID_STATUS`；401 |
+| GET | `/api/items/expiring` | 临期物品列表（`days` 缺省取 `expiry.remind.days` 阈值，可用 `days` 显式覆盖；F2/M1 单一口径） | 响应 `ItemResponse[]` | — |
 | GET | `/api/items/{id}` | 详情 | `ItemResponse`：`{id, name, categoryId, locationId, quantity, unit, purchasePrice, purchaseDate, expiryDate, photoUrl, status, remark, createdBy, createdAt}` | 404 `ITEM_NOT_FOUND` |
 | POST | `/api/items` | 新增；`quantity>0` 时写 INITIAL 出入库记录，创建人取当前登录者 | 请求 `{name, categoryId, locationId, quantity, unit?, purchasePrice?, purchaseDate?, expiryDate?, photoUrl?, remark?}` | 400 `NEGATIVE_QUANTITY`；404 `CATEGORY_NOT_FOUND`、`LOCATION_NOT_FOUND` |
 | PUT | `/api/items/{id}` | 更新 | 请求同新增 | 同上 + 404 `ITEM_NOT_FOUND` |

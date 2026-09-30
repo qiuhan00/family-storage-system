@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import com.family.storage.common.ApiException;
 import com.family.storage.item.*;
+import com.family.storage.settings.SettingsService;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,12 +15,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class StockChangeServiceTest {
     @Mock ItemRepository itemRepository;
     @Mock StockChangeRepository stockChangeRepository;
+    @Mock SettingsService settingsService;
     @Test
     void outMoreThanStockIsRejected() {
         Item item = new Item();
         item.setId(1L); item.setQuantity(2);
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
-        var svc = new ItemService(itemRepository, null, null, stockChangeRepository);
+        var svc = new ItemService(itemRepository, null, null, stockChangeRepository, settingsService);
         assertThrows(ApiException.class, () -> svc.adjustStock(1L, new StockRequest(-5, "OUT", "用到"), 9L));
     }
     @Test
@@ -28,7 +30,7 @@ class StockChangeServiceTest {
         item.setId(1L); item.setQuantity(2);
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(stockChangeRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-        var svc = new ItemService(itemRepository, null, null, stockChangeRepository);
+        var svc = new ItemService(itemRepository, null, null, stockChangeRepository, settingsService);
         svc.adjustStock(1L, new StockRequest(3, "IN", "补货"), 9L);
         assertEquals(5, item.getQuantity());
         verify(stockChangeRepository).save(any());
@@ -43,7 +45,7 @@ class StockChangeServiceTest {
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(itemRepository.save(any(Item.class)))
                 .thenThrow(new org.springframework.orm.ObjectOptimisticLockingFailureException(Item.class, 1L));
-        var svc = new ItemService(itemRepository, null, null, stockChangeRepository);
+        var svc = new ItemService(itemRepository, null, null, stockChangeRepository, settingsService);
         assertThrows(org.springframework.orm.ObjectOptimisticLockingFailureException.class,
                 () -> svc.adjustStock(1L, new StockRequest(-1, "OUT", "并发出库"), 9L));
     }

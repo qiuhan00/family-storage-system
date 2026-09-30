@@ -7,6 +7,7 @@ import com.family.storage.item.dto.ItemRequest;
 import com.family.storage.item.dto.ItemResponse;
 import com.family.storage.item.dto.StockChangeResponse;
 import com.family.storage.location.LocationRepository;
+import com.family.storage.settings.SettingsService;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,38 +27,29 @@ import org.springframework.transaction.annotation.Transactional;
  *   删除失败不残留 items 记录。
  * - adjustStock 校验新 quantity>=0，type 与 delta 对齐（IN 需 delta>0，
  *   OUT 需 delta<0），ADJUST 供手动校准；stockHistory 按时间倒序返回历史。
- * - search 未传 status 时只查 ACTIVE；expiring=true 命中 [today, today+7] 临期窗口
- *   （默认阈值与 app_settings 种子 expiry.remind.days=7 一致）。
+ * - search 未传 status 时只查 ACTIVE；expiring=true 命中 [today, today+阈值] 临期窗口
+ *   （阈值 = app_settings 的 expiry.remind.days，默认 7，与调度/统计同一口径）。
  * - search 默认按创建时间倒序（createdAt desc）。
  * - 外键 category/location 不存在→404；quantity<0→400 NEGATIVE_QUANTITY。
  */
 @Service
 public class ItemService {
 
-    /** search 的 expiring 过滤窗口天数：与 app_settings 种子 expiry.remind.days=7 保持一致。 */
-    public static final int SEARCH_EXPIRING_DAYS = 7;
-
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
     private final StockChangeRepository stockChangeRepository;
+    private final SettingsService settingsService;
 
     @Autowired
     public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository,
-                       LocationRepository locationRepository, StockChangeRepository stockChangeRepository) {
+                       LocationRepository locationRepository, StockChangeRepository stockChangeRepository,
+                       SettingsService settingsService) {
         this.itemRepository = itemRepository;
         this.categoryRepository = categoryRepository;
         this.locationRepository = locationRepository;
         this.stockChangeRepository = stockChangeRepository;
-    }
-
-    /**
-     * 便捷构造器（不注入出入库仓储）：仅供 Task 4 既有单元测试使用；
-     * 生产注入走 4 参构造器。stockChangeRepository 为 null 时出入库审计方法不落记录。
-     */
-    public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository,
-                       LocationRepository locationRepository) {
-        this(itemRepository, categoryRepository, locationRepository, null);
+        this.settingsService = settingsService;
     }
 
     public PageResponse<ItemResponse> search(String keyword, Long categoryId, Long locationId,
@@ -66,7 +58,7 @@ public class ItemService {
         ItemStatus st = (status == null || status.isBlank()) ? ItemStatus.ACTIVE : parseStatus(status);
         LocalDate today = LocalDate.now();
         LocalDate from = expiring ? today : null;
-        LocalDate to = expiring ? today.plusDays(SEARCH_EXPIRING_DAYS) : null;
+        LocalDate to = expiring ? today.plusDays(remindDays()) : null;
         Pageable sorted = pageable.getSort().isUnsorted()
                 ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                         Sort.by(Sort.Direction.DESC, "createdAt"))
@@ -75,11 +67,22 @@ public class ItemService {
         return PageResponse.of(page.map(this::toResponse));
     }
 
-    public List<ItemResponse> expiringList(int days) {
+    /**
+     * 临期列表（spec §5.4 GET /api/items/expiring）：days 缺省取阈值
+     * （expiry.remind.days），显式传参覆盖——与 search expiring / 统计 / 调度同口径。
+     */
+    public List<ItemResponse> expiringList(Integer days) {
+        int window = days != null ? days : remindDays();
         LocalDate today = LocalDate.now();
         return itemRepository
-                .findByStatusAndExpiryDateBetweenOrderByExpiryDateAsc(ItemStatus.ACTIVE, today, today.plusDays(days))
+                .findByStatusAndExpiryDateBetweenOrderByExpiryDateAsc(ItemStatus.ACTIVE, today, today.plusDays(window))
                 .stream().map(this::toResponse).toList();
+    }
+
+    /** 临期阈值（天）：app_settings.expiry.remind.days，缺失回退默认 7——全系统唯一临期口径。 */
+    private int remindDays() {
+        return settingsService.getInt(SettingsService.EXPIRY_REMIND_DAYS,
+                SettingsService.DEFAULT_EXPIRY_REMIND_DAYS);
     }
 
     public ItemResponse get(Long id) {

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.family.storage.category.CategoryRepository;
@@ -17,6 +18,7 @@ import com.family.storage.item.ItemStatus;
 import com.family.storage.item.dto.ItemRequest;
 import com.family.storage.item.dto.ItemResponse;
 import com.family.storage.location.LocationRepository;
+import com.family.storage.settings.SettingsService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -36,12 +38,13 @@ class ItemServiceTest {
     @Mock ItemRepository itemRepository;
     @Mock CategoryRepository categoryRepository;
     @Mock LocationRepository locationRepository;
+    @Mock SettingsService settingsService;
     @Captor ArgumentCaptor<ItemStatus> statusCaptor;
     @Captor ArgumentCaptor<LocalDate> fromCaptor;
     @Captor ArgumentCaptor<LocalDate> toCaptor;
 
     private ItemService svc() {
-        return new ItemService(itemRepository, categoryRepository, locationRepository);
+        return new ItemService(itemRepository, categoryRepository, locationRepository, null, settingsService);
     }
 
     private ItemRequest req(Long categoryId, Long locationId, int quantity) {
@@ -149,14 +152,24 @@ class ItemServiceTest {
     }
 
     @Test
-    void searchExpiringPassesTodayWindow() {
+    void searchExpiringWindowFollowsConfiguredThreshold() {
+        when(settingsService.getInt(SettingsService.EXPIRY_REMIND_DAYS,
+                SettingsService.DEFAULT_EXPIRY_REMIND_DAYS)).thenReturn(30);
         when(itemRepository.search(any(), any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(item())));
         svc().search(null, null, null, null, true, PageRequest.of(0, 10));
         verify(itemRepository).search(any(), any(), any(), any(),
                 fromCaptor.capture(), toCaptor.capture(), any(Pageable.class));
         assertEquals(LocalDate.now(), fromCaptor.getValue());
-        assertEquals(LocalDate.now().plusDays(ItemService.SEARCH_EXPIRING_DAYS), toCaptor.getValue());
+        assertEquals(LocalDate.now().plusDays(30), toCaptor.getValue());
+    }
+
+    @Test
+    void searchWithoutExpiringSkipsThresholdLookup() {
+        when(itemRepository.search(any(), any(), any(), any(), any(), any(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(item())));
+        svc().search(null, null, null, null, false, PageRequest.of(0, 10));
+        verifyNoInteractions(settingsService);
     }
 
     @Test
@@ -167,5 +180,16 @@ class ItemServiceTest {
         List<ItemResponse> result = svc().expiringList(3);
         assertEquals(1, result.size());
         assertEquals(ItemStatus.ACTIVE.name(), result.get(0).status());
+    }
+
+    @Test
+    void expiringListWithoutDaysFallsBackToThreshold() {
+        when(settingsService.getInt(SettingsService.EXPIRY_REMIND_DAYS,
+                SettingsService.DEFAULT_EXPIRY_REMIND_DAYS)).thenReturn(30);
+        LocalDate today = LocalDate.now();
+        when(itemRepository.findByStatusAndExpiryDateBetweenOrderByExpiryDateAsc(
+                ItemStatus.ACTIVE, today, today.plusDays(30))).thenReturn(List.of(item()));
+        List<ItemResponse> result = svc().expiringList(null);
+        assertEquals(1, result.size());
     }
 }
