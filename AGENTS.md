@@ -16,6 +16,7 @@
 - 技能映射：`.opencode/skills/` 下已装 `api-tester`（接口测试执行规范）、`e2e-test`（Playwright E2E，供 ui-tester 加载）、`fullstack-coder`（全栈实现规范）。子 Agent 先用 `/skill` 加载对应技能再执行。
 - 敏感信息：一律走环境变量，禁止硬编码密钥；用 Task 传参给子 Agent 时只放非敏感信息。
 - 评审产物（接口规范、测试报告、文档）落盘到 `docs/`，保留可追溯证据。
+- Playwright MCP 用完即清：每次结束必须调用 `close` 关闭浏览器，并删除其缓存 profile `%LOCALAPPDATA%\ms-playwright-mcp`（cookie/localStorage/HTTP 缓存）及 `%TEMP%\playwright-artifacts-*`、`%TEMP%\playwright-transform-cache`；不得残留登录态。不要删除 `%LOCALAPPDATA%\ms-playwright`（浏览器二进制，体积大需重下）。
 
 ## 注意
 

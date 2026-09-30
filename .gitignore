@@ -22,5 +22,10 @@ Thumbs.db
 # OpenCode SDD scratch
 .superpowers/
 
+# Local tool artifacts (MCP logs, audits, stray screenshots)
+/*.png
+/.playwright-mcp/
+/.skill-audit/
+
 # Git worktrees (isolation dirs)
 .worktrees/
