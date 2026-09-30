@@ -1,0 +1,46 @@
+# config
+url,http://localhost:5173/
+viewport,390x844
+setup,Clear localStorage
+timeout,12
+
+# F2 缺陷修复验收 —— 临期口径统一为 app_settings 的 expiry.remind.days（GET /api/settings → expiry_remind_days）
+# 被测：家庭收纳物品管理系统（Vue3+Vant 前端 5173 / Spring Boot 后端 8080 / 主库 family_storage）
+# 登录：admin / admin456（ADMIN）。前置种子数据（F2E 前缀 3 条）由 scripts/f2-seed.mjs 创建，跑完由 f2-cleanup.mjs 清理。
+# 阈值初始 = 7；场景 B 改 30；场景 C 必须恢复 7。
+
+# steps
+step,action,target,input,expected_result
+1,navigate,http://localhost:5173/,,未登录重定向到 /login
+2,type,用户名 input,admin,用户名已填
+3,type,密码 input,wrong-password-xyz,密码已填
+4,click,登录 button,,登录失败并弹出「用户名或密码错误」提示，仍停留 /login（错误分支）
+5,type,密码 input,admin456,密码改正
+6,click,登录 button,,登录成功进入首页 .home-page
+7,verify,临期提醒（7 天内）标题,,首页标题含「7 天内」（动态阈值，来自 GET /api/settings）
+8,verify,临期提醒统计卡 vs 临期列表条数,,统计卡计数与临期列表条数一致且 >0，请求 /api/items/expiring?days=7
+9,click,物品 tabbar,,进入物品列表
+10,click,筛选 button,,打开筛选面板
+11,verify,仅看 7 天内临期,,筛选项文案为「仅看 7 天内临期」（非硬编码 7）
+12,click,确定 button,,关闭筛选面板
+13,verify,F2E临期3天 角标,,红色「临期 yyyy-MM-dd」（class --red，色值 #dc2626）
+14,verify,F2E远期15天 角标,,普通「到期 yyyy-MM-dd」，非「临期」、非橙色 #d97706（旧版此处橙色临期）
+15,verify,牛奶（已过期）角标,,红色「临期」（含已过期）
+16,verify,F2E无到期 角标,,卡片无到期角标
+17,click,F2E临期3天 卡片,,进入详情页，角标红色「临期」
+18,click,返回,,回到物品列表
+19,click,F2E远期15天 卡片,,详情页角标普通「到期」（旧版橙色临期已删除）
+20,click,返回,,回到物品列表
+21,click,筛选 + 仅看 7 天内临期 开关 + 确定,,GET /api/items?expiring=1 结果 = 7 天窗口（仅 F2E临期3天，排除 +15 天物品）
+22,click,筛选 + 关闭临期开关 + 确定,,恢复未筛选列表
+23,navigate,/settings,,ADMIN 进入应用设置，stepper 当前值 = 7
+24,type,临期提醒天数 stepper,30,输入框与提示文案同步为 30
+25,click,保存设置 button,,toast「已保存」，GET /api/settings → 30
+26,click,首页 tabbar,,标题变为「临期提醒（30 天内）」，临期列表包含 F2E远期15天，统计卡与列表条数一致，请求 days=30
+27,click,物品 tabbar + 筛选,,筛选文案变为「仅看 30 天内临期」，「仅看 7 天内临期」不复存在
+28,verify,F2E远期15天 角标（阈值 30）,,由「到期」变为红色「临期」
+29,click,仅看 30 天内临期 开关 + 确定,,expiring=1 结果包含 F2E临期3天 与 F2E远期15天，与后端接口条数一致
+30,navigate,/settings + 临期提醒天数 7 + 保存,,恢复阈值 7（保存成功，API 确认 = 7）
+31,click,首页 tabbar,,标题恢复「临期提醒（7 天内）」，请求 days=7
+32,click,物品 tabbar + 筛选,,筛选文案恢复「仅看 7 天内临期」
+33,verify,console / pageerror,,全程无 JS 未捕获异常、无非预期 console error（401 预期内不算）

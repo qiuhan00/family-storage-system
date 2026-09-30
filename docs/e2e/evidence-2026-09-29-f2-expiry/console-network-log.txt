@@ -1,0 +1,36 @@
+=== console errors ===
+- Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5173/favicon.ico
+- Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/auth/login
+=== page errors (uncaught) ===
+=== http >= 400 ===
+- 401 POST http://localhost:5173/api/auth/login
+=== failed requests ===
+=== /api/items/expiring requests ===
+- http://localhost:5173/api/items/expiring?days=7
+- http://localhost:5173/api/items/expiring?days=30
+- http://localhost:5173/api/items/expiring?days=7
+=== /api/items?expiring=1 requests ===
+- http://localhost:5173/api/items?status=ACTIVE&expiring=1&page=0&size=20
+- http://localhost:5173/api/items?status=ACTIVE&expiring=1&page=0&size=20
+=== /api/settings requests ===
+- http://localhost:5173/src/api/settings.ts
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/src/api/settings.ts
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/src/api/settings.ts
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+- http://localhost:5173/api/settings
+=== allowed console errors (2) ===
+- Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5173/favicon.ico
+- Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:5173/api/auth/login
+=== unexpected console errors (0) ===
