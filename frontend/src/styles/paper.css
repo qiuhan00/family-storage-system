@@ -1,1 +1,220 @@
-/* src/styles/paper.css —— 纸感共享类与 Vant 皮肤覆盖（Task 2 填充）。 */
+/* src/styles/paper.css —— 纸感共享类 + Vant 皮肤覆盖（便签纸视觉）。
+   令牌来自 global.css 的 CSS 变量；此处不含任何组件逻辑。 */
+
+/* ---------- 共享纸感类 ---------- */
+.paper-page {
+  min-height: 100vh;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(43, 38, 34, 0.05) 1px, transparent 1px);
+  background-size: 7px 7px;
+}
+
+.paper-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: 1px 2px 0 rgba(43, 38, 34, 0.08);
+}
+
+.paper-card--tilt-a {
+  transform: rotate(-0.5deg);
+}
+
+.paper-card--tilt-b {
+  transform: rotate(0.5deg);
+}
+
+.paper-note {
+  background: var(--note);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: 2px 3px 0 rgba(43, 38, 34, 0.08);
+}
+
+.paper-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px dashed var(--dashed);
+  border-radius: 2px;
+}
+
+.paper-chip--moss {
+  color: #4e5a3a;
+  background: var(--moss-soft);
+  border-color: rgba(107, 122, 79, 0.5);
+}
+
+.paper-chip--warning {
+  color: var(--terracotta);
+  background: var(--terracotta-soft);
+  border-color: rgba(194, 96, 60, 0.5);
+}
+
+.paper-title {
+  font-family: var(--fs-font-display);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+}
+
+.paper-section-title {
+  margin: 0;
+  font-family: var(--fs-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+}
+
+.paper-sticker-btn {
+  color: #fff7ef !important;
+  background: var(--terracotta) !important;
+  border-color: var(--terracotta) !important;
+  border-radius: 2px !important;
+}
+
+.paper-btn-ink {
+  color: var(--paper) !important;
+  background: var(--ink) !important;
+  border-color: var(--ink) !important;
+  border-radius: 2px !important;
+}
+
+/* 纸卡落下动效：配合内联 animation-delay 做错峰；reduced-motion 由 global.css 统一关闭 */
+@keyframes paper-drop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.paper-drop {
+  animation: paper-drop 0.22s ease-out both;
+}
+
+/* ---------- Vant 皮肤覆盖 ---------- */
+.van-nav-bar {
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+.van-nav-bar__title {
+  font-family: var(--fs-font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.van-nav-bar__text,
+.van-nav-bar .van-icon {
+  color: var(--ink);
+}
+
+.van-tabbar {
+  background: var(--paper);
+  border-top: 1px dashed var(--dashed);
+}
+
+.van-tabbar-item {
+  color: var(--ink-2);
+}
+
+.van-tabbar-item--active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.van-cell-group--inset {
+  margin: 0 12px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: 1px 2px 0 rgba(43, 38, 34, 0.08);
+  overflow: hidden;
+}
+
+.van-cell {
+  background: transparent;
+  color: var(--ink);
+}
+
+.van-cell::after {
+  border-color: var(--dashed);
+}
+
+.van-cell__label {
+  color: var(--ink-2);
+}
+
+.van-field {
+  background: transparent;
+}
+
+.van-field__label {
+  color: var(--ink-2);
+}
+
+.van-field__control::placeholder {
+  color: var(--ink-2);
+}
+
+.van-button--primary {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.van-button--danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.van-popup,
+.van-dialog {
+  background: var(--card);
+}
+
+.van-dialog__header,
+.van-dialog__message {
+  color: var(--ink);
+}
+
+.van-tag--primary {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.van-search {
+  background: transparent;
+}
+
+.van-search__content {
+  background: var(--card);
+  border: 1px dashed var(--dashed);
+  border-radius: 2px;
+}
+
+.van-badge {
+  background: var(--terracotta);
+  color: #fff7ef;
+}
+
+.van-tabs__line {
+  background: var(--ink);
+}
+
+.van-picker,
+.van-calendar {
+  background: var(--card);
+}
+
+.van-loading {
+  color: var(--ink);
+}
