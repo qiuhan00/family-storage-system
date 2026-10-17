@@ -1,34 +1,25 @@
-/* src/styles/global.css —— 全局基线：设计令牌、字体栈、焦点可见性、动效偏好。 */
+/* src/styles/global.css —— 全局基线（便签纸）：纸张/墨色调色板、字体、焦点可见性、动效偏好。 */
 
 :root {
-  /* 调色板（Family Calendar & Chores） */
-  --fs-primary: #2563eb;
-  --fs-primary-dark: #1d4ed8;
-  --fs-primary-soft: #dbeafe;
-  --fs-success: #059669;
-  --fs-success-soft: #d1fae5;
-  --fs-warning: #d97706;
-  --fs-warning-soft: #fef3c7;
-  --fs-danger: #dc2626;
-  --fs-danger-soft: #fee2e2;
+  /* 便签纸调色板（镜像 tokens.ts） */
+  --paper: #f6f1e7;
+  --card: #fffdf8;
+  --note: #fbf3d5;
+  --ink: #2b2622;
+  --ink-2: #6e655a; /* 正文/次要文字（对纸底 ≥4.5:1） */
+  --ink-3: #8a8072; /* 仅非文本（边框/装饰），不得承载文字 */
+  --terracotta: #c2603c;
+  --terracotta-soft: #fbefe6;
+  --moss: #6b7a4f;
+  --moss-soft: #e9eedd;
+  --amber: #c99a3b;
+  --line: rgba(43, 38, 34, 0.14);
+  --dashed: rgba(43, 38, 34, 0.35);
+  --danger: #a8391f;
+  --danger-soft: #f4e3dc;
 
-  /* 表面与文字 */
-  --fs-bg: #f8fafc;
-  --fs-surface: #ffffff;
-  --fs-surface-soft: #f1f5fd;
-  --fs-text: #0f172a;
-  --fs-text-2: #475569;
-  --fs-text-3: #64748b; /* 小号文字对白底 ≥4.5:1 */
-  --fs-border: #e4ecfc;
-
-  /* 圆角 / 阴影 / 间距节奏（8px 系） */
-  --fs-radius-sm: 8px;
-  --fs-radius-md: 12px;
-  --fs-radius-lg: 16px;
-  --fs-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --fs-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
-
-  /* 中文优先系统字体栈（离线部署，不依赖 CDN 字体） */
+  /* 字体：标题走自托管中文衬线（Noto Serif SC），正文走系统中文字体栈 */
+  --fs-font-display: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
   --fs-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial,
     sans-serif;
@@ -41,14 +32,14 @@ html {
 body {
   margin: 0;
   font-family: var(--fs-font);
-  background-color: var(--fs-bg);
-  color: var(--fs-text);
+  background-color: var(--paper);
+  color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 键盘可达性：可见焦点环（3px 主色半透明） */
+/* 键盘可达性：可见焦点环（陶土色半透明） */
 :focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.45);
+  outline: 3px solid rgba(194, 96, 60, 0.45);
   outline-offset: 2px;
 }
 
