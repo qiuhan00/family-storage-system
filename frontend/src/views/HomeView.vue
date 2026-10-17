@@ -96,16 +96,19 @@ onMounted(() => {
   <div class="home-page">
     <!-- 统计总览 -->
     <section class="home-section">
-      <h2 class="section-title">统计总览</h2>
+      <h2 class="section-title paper-section-title">统计总览</h2>
       <div v-if="loadingSummary" class="block-loading">
         <van-loading size="24">加载中…</van-loading>
       </div>
       <div v-else-if="summary" class="stat-grid">
         <div
-          v-for="card in statCards"
+          v-for="(card, idx) in statCards"
           :key="card.label"
-          class="stat-card"
-          :class="{ 'stat-card--warning': card.label === '临期提醒' && summary!.expiringSoon > 0 }"
+          class="stat-card paper-card paper-drop"
+          :class="[
+            idx % 2 ? 'paper-card--tilt-b' : 'paper-card--tilt-a',
+            { 'stat-card--warning': card.label === '临期提醒' && summary!.expiringSoon > 0 },
+          ]"
         >
           <div class="stat-card__value">{{ card.value }}<span class="stat-card__suffix">{{ card.suffix }}</span></div>
           <div class="stat-card__label">{{ card.label }}</div>
@@ -116,26 +119,29 @@ onMounted(() => {
 
     <!-- 临期物品 -->
     <section class="home-section">
-      <h2 class="section-title">临期提醒（{{ remindDays }} 天内）</h2>
+      <h2 class="section-title paper-section-title">临期提醒（{{ remindDays }} 天内）</h2>
       <div v-if="loadingExpiring" class="block-loading">
         <van-loading size="24">加载中…</van-loading>
       </div>
       <van-empty v-else-if="expiringItems.length === 0" description="暂无临期物品" image-size="60" />
-      <van-cell-group v-else inset>
-        <van-cell
+      <div v-else class="expiry-notes">
+        <div
           v-for="item in expiringItems"
           :key="item.id"
-          :title="item.name"
-          :label="`临期 ${item.expiryDate} · 余量 ${item.quantity}${item.unit}`"
-          is-link
+          class="expiry-note paper-note"
           @click="onItemTap(item)"
-        />
-      </van-cell-group>
+        >
+          <div class="expiry-note__name">{{ item.name }}</div>
+          <div class="expiry-note__meta">
+            临期 {{ item.expiryDate }} · 余量 {{ item.quantity }}{{ item.unit }}
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 分类 / 位置维度 -->
     <section class="home-section">
-      <h2 class="section-title">维度统计</h2>
+      <h2 class="section-title paper-section-title">维度统计</h2>
       <div v-if="loadingDims" class="block-loading">
         <van-loading size="24">加载中…</van-loading>
       </div>
@@ -173,17 +179,17 @@ onMounted(() => {
 }
 
 .home-section {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   padding: 4px 0;
-  background: var(--fs-surface);
+  background: transparent;
 }
 
 .section-title {
   margin: 0;
   padding: 12px 16px 4px;
   font-size: 16px;
-  font-weight: 600;
-  color: var(--fs-text);
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .block-loading {
@@ -200,38 +206,77 @@ onMounted(() => {
 }
 
 .stat-card {
-  border: 1px solid var(--fs-border);
-  border-radius: 8px;
   padding: 12px;
-  background: var(--fs-surface-soft);
 }
 
-.stat-card--warning {
-  border-color: var(--fs-warning);
-  background: var(--fs-warning-soft);
+.stat-card.stat-card--warning {
+  background: var(--note);
+  border-color: rgba(194, 96, 60, 0.35);
 }
 
 .stat-card__value {
+  font-family: var(--fs-font-display);
   font-size: 22px;
-  font-weight: 600;
-  color: var(--fs-text);
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .stat-card__suffix {
   margin-left: 2px;
   font-size: 12px;
   font-weight: 400;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .stat-card__label {
   margin-top: 4px;
   font-size: 13px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
+}
+
+.expiry-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 12px;
+}
+
+.expiry-note {
+  padding: 12px;
+  cursor: pointer;
+  transform: rotate(-0.4deg);
+}
+
+.expiry-note:nth-child(even) {
+  transform: rotate(0.4deg);
+}
+
+.expiry-note__name {
+  font-family: var(--fs-font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.expiry-note__meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--terracotta);
 }
 
 .dim-collapse {
-  border-radius: 8px;
+  border-radius: 3px;
   overflow: hidden;
+  background: transparent;
+}
+
+.dim-collapse :deep(.van-collapse-item__title),
+.dim-collapse :deep(.van-collapse-item__content) {
+  background: var(--card);
+}
+
+.dim-collapse :deep(.van-collapse-item__title) {
+  font-family: var(--fs-font-display);
+  font-weight: 700;
 }
 </style>
