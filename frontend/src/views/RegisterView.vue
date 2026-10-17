@@ -124,7 +124,9 @@ const goLogin = () => router.replace('/login');
   min-height: 100vh;
   padding: 16vh 0 24px;
   box-sizing: border-box;
-  background: var(--fs-bg);
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(43, 38, 34, 0.05) 1px, transparent 1px);
+  background-size: 7px 7px;
 }
 .auth-title {
   text-align: center;
@@ -132,20 +134,24 @@ const goLogin = () => router.replace('/login');
 }
 .auth-title h1 {
   margin: 0 0 8px;
-  font-size: 26px;
-  color: var(--fs-primary);
+  font-family: var(--fs-font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--ink);
 }
 .auth-title p {
   margin: 0;
   font-size: 14px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 .auth-actions {
   margin: 24px 16px 0;
 }
 .auth-login {
   margin-top: 12px;
-  border-color: var(--fs-text-3);
-  color: var(--fs-text-2);
+  border-color: var(--ink);
+  color: var(--ink);
+  border-radius: 2px;
 }
 </style>
