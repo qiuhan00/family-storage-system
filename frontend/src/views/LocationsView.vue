@@ -221,7 +221,10 @@ onMounted(load);
   <div class="locations-page">
     <div class="locations-toolbar">
       <span class="locations-toolbar__title">共 {{ flat.length }} 个位置</span>
-      <van-button size="small" icon="plus" type="primary" @click="openCreate">新增位置</van-button>
+      <van-button size="small" type="primary" class="paper-sticker-btn" @click="openCreate">
+        <template #icon><PaperIcon name="plus" :size="14" /></template>
+        新增位置
+      </van-button>
     </div>
 
     <div v-if="loading" class="block-loading">
@@ -232,7 +235,7 @@ onMounted(load);
       <div
         v-for="loc in flat"
         :key="loc.id"
-        class="location-row"
+        class="location-row paper-card"
         :style="{ paddingLeft: `${12 + loc.depth * 16}px` }"
       >
         <img v-if="loc.imageUrl" :src="loc.imageUrl" class="location-row__thumb" alt="" />
@@ -343,12 +346,12 @@ onMounted(load);
   align-items: center;
   justify-content: space-between;
   padding: 12px;
-  background: var(--fs-surface);
+  background: var(--paper);
 }
 
 .locations-toolbar__title {
   font-size: 13px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .block-loading {
@@ -365,27 +368,24 @@ onMounted(load);
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--fs-surface);
-  box-shadow: var(--fs-shadow-sm);
 }
 
 .location-row__thumb {
   flex: 0 0 auto;
   width: 44px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: 3px;
   object-fit: cover;
-  background: var(--fs-surface-soft);
+  background: var(--paper);
 }
 
 .location-row__thumb--empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .location-row__main {
@@ -396,7 +396,7 @@ onMounted(load);
 .location-row__name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--fs-text);
+  color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -405,14 +405,14 @@ onMounted(load);
 .location-row__desc {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--fs-text-2);
+  color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .location-row__desc--empty {
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .location-row__ops {
@@ -421,12 +421,17 @@ onMounted(load);
   gap: 8px;
 }
 
+.form-panel {
+  background: var(--card);
+}
+
 .form-panel__title {
   padding: 16px 16px 4px;
+  font-family: var(--fs-font-display);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 
 .uploader-block {
@@ -436,7 +441,7 @@ onMounted(load);
 .uploader-block__label {
   margin-bottom: 8px;
   font-size: 13px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .form-panel__footer {
@@ -451,9 +456,10 @@ onMounted(load);
 
 .parent-panel__title {
   padding: 16px 16px 8px;
+  font-family: var(--fs-font-display);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 </style>

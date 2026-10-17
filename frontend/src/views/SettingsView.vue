@@ -104,7 +104,7 @@ onMounted(() => {
           </template>
         </van-field>
         <van-cell
-          :title="`已购物品在到期日前 ${days} 天收到站内提醒`"
+          :title="`临期物品在到期日前 ${days} 天收到站内提醒`"
           :border="false"
           class="settings-hint"
         />
@@ -136,7 +136,7 @@ onMounted(() => {
 
 .settings-hint {
   font-size: 12px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .settings-save {
@@ -145,5 +145,6 @@ onMounted(() => {
 
 .settings-save .van-button {
   height: 44px;
+  border-radius: 2px;
 }
 </style>

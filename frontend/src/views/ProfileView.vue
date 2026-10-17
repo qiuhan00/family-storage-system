@@ -87,9 +87,9 @@ onMounted(async () => {
 <template>
   <div class="profile-page">
     <!-- 用户信息卡 -->
-    <div class="profile-card">
+    <div class="profile-card paper-card">
       <div class="profile-card__avatar">
-        <van-icon name="user-circle-o" size="48" color="var(--fs-primary)" aria-hidden="true" />
+        <van-icon name="user-circle-o" size="48" color="var(--ink)" aria-hidden="true" />
       </div>
       <div class="profile-card__info">
         <div class="profile-card__name">{{ displayName }}</div>
@@ -166,9 +166,6 @@ onMounted(async () => {
   gap: 12px;
   margin: 0 12px 12px;
   padding: 20px 16px;
-  border-radius: 8px;
-  background: var(--fs-surface);
-  box-shadow: var(--fs-shadow-sm);
 }
 
 .profile-card__info {
@@ -176,15 +173,16 @@ onMounted(async () => {
 }
 
 .profile-card__name {
+  font-family: var(--fs-font-display);
   font-size: 18px;
-  font-weight: 600;
-  color: var(--fs-text);
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .profile-card__meta {
   margin-top: 4px;
   font-size: 13px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .profile-group {
@@ -192,19 +190,24 @@ onMounted(async () => {
 }
 
 .profile-group--admin .van-cell {
-  color: var(--fs-primary);
+  color: var(--ink);
 }
 
 .profile-logout {
   padding: 16px;
 }
 
+.pwd-panel {
+  background: var(--card);
+}
+
 .pwd-panel__title {
   padding: 16px 16px 4px;
+  font-family: var(--fs-font-display);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 
 .pwd-panel__footer {

@@ -11,6 +11,7 @@ import type { FieldRule } from 'vant';
 import { apiErrorMessage } from '../api/http';
 import { usersApi, type UserPayload } from '../api/users';
 import { authApi } from '../api/auth';
+import PaperIcon from '../components/PaperIcon.vue';
 import { useAuthStore } from '../store/auth';
 import type { Role, UserResponse } from '../types';
 
@@ -201,7 +202,10 @@ onMounted(() => {
         成员管理
         <span class="users-toolbar__count" v-if="totalElements">共 {{ totalElements }} 人</span>
       </span>
-      <van-button size="small" icon="plus" type="primary" @click="openCreate">新增成员</van-button>
+      <van-button size="small" type="primary" class="paper-sticker-btn" @click="openCreate">
+        <template #icon><PaperIcon name="plus" :size="14" /></template>
+        新增成员
+      </van-button>
     </div>
 
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
@@ -213,13 +217,16 @@ onMounted(() => {
         @load="onLoad"
       >
         <div v-if="users.length" class="user-list">
-          <div v-for="u in users" :key="u.id" class="user-card">
+          <div v-for="u in users" :key="u.id" class="user-card paper-card">
             <div class="user-card__info">
               <div class="user-card__name">
                 {{ u.displayName }}
-                <van-tag plain :type="u.role === 'ADMIN' ? 'warning' : 'primary'" class="user-card__role">
+                <span
+                  class="paper-chip user-card__role"
+                  :class="u.role === 'ADMIN' ? 'user-card__role--admin' : 'user-card__role--member'"
+                >
                   {{ roleLabel[u.role] }}
-                </van-tag>
+                </span>
               </div>
               <div class="user-card__meta">
                 @{{ u.username }} · {{ isEnabled(u) ? '启用中' : '已停用' }}
@@ -322,7 +329,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px;
-  background: var(--fs-surface);
+  background: var(--paper);
 }
 
 .users-toolbar__title {
@@ -335,7 +342,7 @@ onMounted(() => {
   margin-left: 6px;
   font-size: 12px;
   font-weight: 400;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .user-list {
@@ -347,11 +354,8 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   padding: 12px;
-  border-radius: 8px;
-  background: var(--fs-surface);
-  box-shadow: var(--fs-shadow-sm);
 }
 
 .user-card__info {
@@ -371,10 +375,22 @@ onMounted(() => {
   margin-left: 6px;
 }
 
+.user-card__role--admin {
+  color: var(--terracotta);
+  background: var(--terracotta-soft);
+  border-color: rgba(194, 96, 60, 0.5);
+}
+
+.user-card__role--member {
+  color: #4e5a3a;
+  background: var(--moss-soft);
+  border-color: rgba(107, 122, 79, 0.5);
+}
+
 .user-card__meta {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .user-card__ops {
@@ -385,18 +401,23 @@ onMounted(() => {
   gap: 8px;
 }
 
+.panel {
+  background: var(--card);
+}
+
 .panel__title {
   padding: 16px 16px 4px;
+  font-family: var(--fs-font-display);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 
 .panel__desc {
   padding: 4px 16px 8px;
   font-size: 12px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
   text-align: center;
 }
 
