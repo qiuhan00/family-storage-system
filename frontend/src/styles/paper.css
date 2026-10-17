@@ -102,6 +102,29 @@
 }
 
 /* ---------- Vant 皮肤覆盖 ---------- */
+/* Vant 的组件级变量（如 --van-button-primary-background）在 :root 上按默认主色解析，
+   ConfigProvider 只改 --van-primary-color 无法回灌到已解析的组件变量。
+   在 #app（更高特异性）重设组件变量，让整棵子树都拿到纸感配色。 */
+#app {
+  --van-primary-color: #2b2622;
+  --van-success-color: #6b7a4f;
+  --van-warning-color: #c99a3b;
+  --van-danger-color: #a8391f;
+  --van-text-color: #2b2622;
+  --van-text-color-2: #6e655a;
+  --van-text-color-3: #6e655a;
+  --van-background: #f6f1e7;
+  --van-background-2: #fffdf8;
+  --van-border-color: #e4ddce;
+  --van-active-color: #2b2622;
+  --van-button-primary-background: #2b2622;
+  --van-button-primary-border-color: #2b2622;
+  --van-button-primary-color: #f6f1e7;
+  --van-button-danger-background: #a8391f;
+  --van-button-danger-border-color: #a8391f;
+  --van-button-danger-color: #fffdf8;
+}
+
 .van-nav-bar {
   background: var(--paper);
   border-bottom: 1px solid var(--line);
@@ -171,14 +194,33 @@
   color: var(--ink-2);
 }
 
-.van-button--primary {
-  background: var(--ink);
-  border-color: var(--ink);
+/* 纸感按钮统一近直角（覆盖 Vant 的 round 胶囊） */
+.van-button.van-button--round {
+  border-radius: 2px;
 }
 
-.van-button--danger {
+.van-button.van-button--primary:not(.van-button--plain) {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.van-button.van-button--primary.van-button--plain {
+  background: transparent;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.van-button.van-button--danger:not(.van-button--plain) {
   background: var(--danger);
   border-color: var(--danger);
+  color: #fffdf8;
+}
+
+.van-button.van-button--danger.van-button--plain {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .van-popup,
