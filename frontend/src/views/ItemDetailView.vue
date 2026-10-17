@@ -207,7 +207,7 @@ watch(itemId, (v) => {
         <div v-else class="detail-cover__empty">暂无照片</div>
       </div>
 
-      <div class="detail-head">
+      <div class="detail-head paper-note">
         <div class="detail-head__name">{{ item.name }}</div>
         <div
           v-if="expiryLevel(item.expiryDate, remindDays) === 'red'"
@@ -218,35 +218,62 @@ watch(itemId, (v) => {
         <div v-else-if="item.expiryDate" class="detail-head__expiry">到期 {{ item.expiryDate }}</div>
       </div>
 
-      <van-cell-group inset>
-        <van-cell title="数量" :value="`${item.quantity}${item.unit ?? ''}`" />
-        <van-cell title="分类" :value="categoryName(item.categoryId)" />
-        <van-cell title="位置" :value="locationPath(item.locationId)" />
-        <van-cell
-          title="单价"
-          :value="item.purchasePrice != null ? `¥ ${item.purchasePrice}` : '—'"
-        />
-        <van-cell title="购买日期" :value="item.purchaseDate ?? '—'" />
-        <van-cell title="状态" :value="statusLabel[item.status] ?? item.status" />
-        <van-cell v-if="item.remark" title="备注" :value="item.remark" />
-      </van-cell-group>
+      <div class="detail-fields paper-card">
+        <div class="detail-field">
+          <span class="detail-field__label">数量</span>
+          <span class="detail-field__value">{{ item.quantity }}{{ item.unit ?? '' }}</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-field__label">单价</span>
+          <span class="detail-field__value">{{
+            item.purchasePrice != null ? `¥ ${item.purchasePrice}` : '—'
+          }}</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-field__label">分类</span>
+          <span class="detail-field__value">{{ categoryName(item.categoryId) }}</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-field__label">位置</span>
+          <span class="detail-field__value">{{ locationPath(item.locationId) }}</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-field__label">购买日期</span>
+          <span class="detail-field__value">{{ item.purchaseDate ?? '—' }}</span>
+        </div>
+        <div class="detail-field">
+          <span class="detail-field__label">状态</span>
+          <span class="detail-field__value">{{ statusLabel[item.status] ?? item.status }}</span>
+        </div>
+        <div v-if="item.remark" class="detail-field detail-field--full">
+          <span class="detail-field__label">备注</span>
+          <span class="detail-field__value">{{ item.remark }}</span>
+        </div>
+      </div>
 
       <div class="detail-section">
-        <h3 class="detail-section__title">库存变更</h3>
-        <van-cell-group inset>
-          <van-empty v-if="history.length === 0" description="暂无出入库记录" image-size="60" />
-          <van-cell v-for="ch in history" v-else :key="ch.id">
-            <template #title>
-              <span class="history-type">{{ stockTypeLabel(ch.type) }} · {{ fmtTime(ch.createdAt) }}</span>
-              <span v-if="ch.note" class="history-note">{{ ch.note }}</span>
-            </template>
-            <template #value>
-              <span :class="ch.changeQty >= 0 ? 'history-qty--in' : 'history-qty--out'">
-                {{ ch.changeQty >= 0 ? '+' : '' }}{{ ch.changeQty }}
-              </span>
-            </template>
-          </van-cell>
-        </van-cell-group>
+        <h3 class="detail-section__title paper-section-title">库存变更</h3>
+        <van-empty v-if="history.length === 0" description="暂无出入库记录" image-size="60" />
+        <div v-else class="history-list">
+          <div
+            v-for="ch in history"
+            :key="ch.id"
+            class="history-slip"
+            :class="
+              ch.type === 'OUT'
+                ? 'history-slip--out'
+                : ch.type === 'INITIAL'
+                  ? 'history-slip--initial'
+                  : 'history-slip--in'
+            "
+          >
+            <div class="history-slip__main">
+              <span class="history-slip__type">{{ stockTypeLabel(ch.type) }} · {{ fmtTime(ch.createdAt) }}</span>
+              <span v-if="ch.note" class="history-slip__note">{{ ch.note }}</span>
+            </div>
+            <span class="history-slip__qty">{{ ch.changeQty >= 0 ? '+' : '' }}{{ ch.changeQty }}</span>
+          </div>
+        </div>
       </div>
 
       <div class="detail-actions">
@@ -299,7 +326,12 @@ watch(itemId, (v) => {
 }
 
 .detail-cover {
-  margin: 0 16px 8px;
+  margin: 0 16px 10px;
+}
+
+.detail-cover :deep(.van-image) {
+  overflow: hidden;
+  border-radius: 3px;
 }
 
 .detail-cover__empty {
@@ -307,30 +339,72 @@ watch(itemId, (v) => {
   align-items: center;
   justify-content: center;
   height: 200px;
-  border-radius: 8px;
-  background: var(--fs-surface);
-  color: var(--fs-text-3);
+  color: var(--ink-2);
   font-size: 13px;
+  background: var(--card);
+  border: 1px dashed var(--dashed);
+  border-radius: 3px;
 }
 
 .detail-head {
-  padding: 8px 16px 12px;
+  margin: 0 16px 12px;
+  padding: 16px;
+  transform: rotate(-0.4deg);
 }
 
 .detail-head__name {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--fs-text);
+  font-family: var(--fs-font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .detail-head__expiry {
-  margin-top: 6px;
-  font-size: 13px;
+  display: inline-block;
+  margin-top: 8px;
+  padding: 1px 8px;
+  font-size: 11px;
+  color: var(--ink-2);
+  border: 1px solid var(--dashed);
+  border-radius: 10px;
+  transform: rotate(2deg);
 }
 
 .detail-head__expiry--red {
-  color: var(--fs-danger);
+  color: var(--terracotta);
+  border-color: rgba(194, 96, 60, 0.5);
   font-weight: 600;
+}
+
+.detail-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 16px 12px;
+  padding: 14px;
+}
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.detail-field--full {
+  grid-column: 1 / -1;
+}
+
+.detail-field__label {
+  font-size: 10px;
+  color: var(--ink-2);
+}
+
+.detail-field__value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-word;
 }
 
 .detail-section {
@@ -341,30 +415,68 @@ watch(itemId, (v) => {
   margin: 0;
   padding: 0 16px 8px;
   font-size: 15px;
-  font-weight: 600;
-  color: var(--fs-text);
+  font-weight: 700;
+  color: var(--ink);
 }
 
-.history-type {
-  font-size: 14px;
-  color: var(--fs-text);
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 16px;
 }
 
-.history-note {
-  display: block;
-  margin-top: 2px;
+.history-slip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
   font-size: 12px;
-  color: var(--fs-text-3);
+  background: var(--card);
+  border-left: 3px solid var(--dashed);
+  box-shadow: 1px 1px 0 rgba(43, 38, 34, 0.07);
 }
 
-.history-qty--in {
-  color: var(--fs-success);
-  font-weight: 600;
+.history-slip--in {
+  border-left-color: var(--moss);
 }
 
-.history-qty--out {
-  color: var(--fs-danger);
-  font-weight: 600;
+.history-slip--initial {
+  border-left-color: var(--amber);
+}
+
+.history-slip--out {
+  border-left-color: var(--danger);
+}
+
+.history-slip__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.history-slip__type {
+  color: var(--ink);
+}
+
+.history-slip__note {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.history-slip__qty {
+  font-family: var(--fs-font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.history-slip--in .history-slip__qty {
+  color: var(--moss);
+}
+
+.history-slip--out .history-slip__qty {
+  color: var(--danger);
 }
 
 .detail-actions {
@@ -384,6 +496,6 @@ watch(itemId, (v) => {
 .stock-dialog__hint {
   margin-bottom: 12px;
   font-size: 13px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 </style>
