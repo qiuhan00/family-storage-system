@@ -175,10 +175,23 @@ onMounted(async () => {
         @load="onLoad"
       >
         <div v-if="items.length" class="item-list">
-          <div v-for="item in items" :key="item.id" class="item-card" @click="goDetail(item)">
+          <div
+            v-for="(item, idx) in items"
+            :key="item.id"
+            class="item-card paper-card paper-drop"
+            :class="idx % 2 ? 'paper-card--tilt-b' : 'paper-card--tilt-a'"
+            @click="goDetail(item)"
+          >
             <div class="item-card__main">
               <div class="item-card__name">{{ item.name }}</div>
-              <div class="item-card__meta">{{ categoryName(item.categoryId) }} · {{ locationPath(item.locationId) }}</div>
+              <div class="item-card__meta">
+                <span v-if="categoryName(item.categoryId)" class="paper-chip">{{
+                  categoryName(item.categoryId)
+                }}</span>
+                <span v-if="locationPath(item.locationId)" class="paper-chip paper-chip--moss">{{
+                  locationPath(item.locationId)
+                }}</span>
+              </div>
               <div v-if="item.remark" class="item-card__remark">{{ item.remark }}</div>
             </div>
             <div class="item-card__side">
@@ -259,7 +272,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   padding: 8px 12px 0;
-  background: var(--fs-surface);
+  background: var(--paper);
 }
 
 .items-toolbar .van-search {
@@ -283,11 +296,9 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   padding: 12px;
-  border-radius: 8px;
-  background: var(--fs-surface);
-  box-shadow: var(--fs-shadow-sm);
+  cursor: pointer;
 }
 
 .item-card__main {
@@ -301,18 +312,16 @@ onMounted(async () => {
 }
 
 .item-card__meta {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--fs-text-3);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .item-card__remark {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -333,7 +342,7 @@ onMounted(async () => {
   margin-left: 2px;
   font-size: 12px;
   font-weight: 400;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .item-card__expiry {
@@ -342,16 +351,21 @@ onMounted(async () => {
 }
 
 .item-card__expiry--red {
-  color: var(--fs-danger);
+  color: var(--terracotta);
   font-weight: 600;
+}
+
+.filter-panel {
+  background: var(--card);
 }
 
 .filter-panel__title {
   padding: 16px 16px 4px;
+  font-family: var(--fs-font-display);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 
 .filter-panel__body {
@@ -367,7 +381,7 @@ onMounted(async () => {
 .filter-group__label {
   margin-bottom: 6px;
   font-size: 13px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
 }
 
 .filter-options {
