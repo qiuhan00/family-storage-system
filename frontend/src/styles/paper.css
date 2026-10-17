@@ -132,6 +132,11 @@
   font-weight: 600;
 }
 
+.van-tabbar-item--active .van-tabbar-item__text {
+  padding-bottom: 1px;
+  border-bottom: 1px dashed var(--terracotta);
+}
+
 .van-cell-group--inset {
   margin: 0 12px 12px;
   background: var(--card);
