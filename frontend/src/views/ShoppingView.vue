@@ -215,12 +215,6 @@ const statusLabel: Record<ShoppingStatus, string> = {
   CANCELLED: '已取消',
 };
 
-const statusTagType: Record<ShoppingStatus, 'primary' | 'success' | 'default'> = {
-  PENDING: 'primary',
-  BOUGHT: 'success',
-  CANCELLED: 'default',
-};
-
 function rowMeta(row: ShoppingItem): string {
   const parts = [`${row.quantity}${row.unit ?? ''}`];
   const cat = categoryName(row.categoryId);
@@ -238,10 +232,10 @@ onMounted(async () => {
 <template>
   <div class="shopping-page">
     <div class="shopping-toolbar">
-      <van-tabs v-model:active="activeTab" shrink color="var(--fs-primary)" class="shopping-tabs">
+      <van-tabs v-model:active="activeTab" shrink color="var(--ink)" class="shopping-tabs">
         <van-tab v-for="t in tabs" :key="t.name" :name="t.name" :title="t.title" />
       </van-tabs>
-      <van-button size="small" icon="plus" type="primary" class="add-btn" @click="openCreate">
+      <van-button size="small" type="primary" class="add-btn paper-sticker-btn" @click="openCreate">
         新增
       </van-button>
     </div>
@@ -268,11 +262,11 @@ onMounted(async () => {
       <!-- 列表 -->
       <div v-else class="shopping-list">
         <van-swipe-cell v-for="row in rows" :key="row.id">
-          <div class="shop-row">
+          <div class="shop-row paper-card">
             <van-checkbox
               :model-value="row.status === 'BOUGHT'"
               shape="round"
-              checked-color="var(--fs-primary)"
+              checked-color="var(--moss)"
               :disabled="row.status === 'CANCELLED'"
               aria-label="标记已购"
               @update:model-value="() => onToggle(row)"
@@ -286,14 +280,13 @@ onMounted(async () => {
               </div>
               <div class="shop-row__meta">{{ rowMeta(row) }}</div>
             </div>
-            <van-tag
+            <span
               v-if="activeTab === 'all'"
-              plain
-              :type="statusTagType[row.status]"
-              class="shop-row__tag"
+              class="shop-row__tag paper-chip"
+              :class="'shop-tag--' + row.status.toLowerCase()"
             >
               {{ statusLabel[row.status] }}
-            </van-tag>
+            </span>
           </div>
 
           <template #right>
@@ -398,7 +391,7 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: var(--fs-surface);
+  background: var(--paper);
 }
 
 .shopping-tabs {
@@ -426,11 +419,8 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   padding: 12px;
-  border-radius: 8px;
-  background: var(--fs-surface);
-  box-shadow: var(--fs-shadow-sm);
 }
 
 .shop-row__main {
@@ -448,14 +438,14 @@ onMounted(async () => {
 }
 
 .shop-row__name--done {
-  color: var(--fs-text-3);
+  color: var(--ink-2);
   text-decoration: line-through;
 }
 
 .shop-row__meta {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--fs-text-3);
+  color: var(--ink-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -465,16 +455,38 @@ onMounted(async () => {
   flex: 0 0 auto;
 }
 
+.shop-tag--pending {
+  color: var(--terracotta);
+  background: var(--terracotta-soft);
+  border-color: rgba(194, 96, 60, 0.5);
+}
+
+.shop-tag--bought {
+  color: #4e5a3a;
+  background: var(--moss-soft);
+  border-color: rgba(107, 122, 79, 0.5);
+}
+
+.shop-tag--cancelled {
+  color: var(--ink-2);
+  border-color: var(--dashed);
+}
+
 .swipe-btn {
   height: 100%;
 }
 
+.form-panel {
+  background: var(--card);
+}
+
 .form-panel__title {
   padding: 16px 16px 4px;
+  font-family: var(--fs-font-display);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 
 .form-panel__footer {
