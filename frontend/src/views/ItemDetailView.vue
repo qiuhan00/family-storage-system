@@ -16,6 +16,7 @@ import { categoriesApi } from '../api/categories';
 import { locationsApi, flattenLocations } from '../api/locations';
 import { settingsApi } from '../api/settings';
 import { expiryLevel } from '../utils/expiry';
+import PaperIcon from '../components/PaperIcon.vue';
 import type { FlatLocation } from '../api/locations';
 import type { Category, Item, StockChange } from '../types';
 
@@ -251,8 +252,14 @@ watch(itemId, (v) => {
       <div class="detail-actions">
         <van-button type="primary" block round @click="showActionSheet = true">出入库</van-button>
         <div class="detail-actions__row">
-          <van-button icon="edit" plain type="primary" block @click="goEdit">编辑</van-button>
-          <van-button icon="delete-o" plain type="danger" block @click="onDelete">删除</van-button>
+          <van-button plain type="primary" block @click="goEdit">
+            <template #icon><PaperIcon name="edit" :size="16" /></template>
+            编辑
+          </van-button>
+          <van-button plain type="danger" block @click="onDelete">
+            <template #icon><PaperIcon name="trash" :size="16" /></template>
+            删除
+          </van-button>
         </div>
       </div>
     </template>

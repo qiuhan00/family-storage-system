@@ -9,6 +9,7 @@ import 'vant/es/dialog/style';
 import type { UploaderFileListItem } from 'vant';
 import { apiErrorMessage } from '../api/http';
 import { filesApi, toFileDeleteName } from '../api/files';
+import PaperIcon from '../components/PaperIcon.vue';
 import { flattenLocations, locationsApi, type FlatLocation } from '../api/locations';
 import type { Location, LocationPayload } from '../types';
 
@@ -236,7 +237,7 @@ onMounted(load);
       >
         <img v-if="loc.imageUrl" :src="loc.imageUrl" class="location-row__thumb" alt="" />
         <div v-else class="location-row__thumb location-row__thumb--empty">
-          <van-icon name="wap-home-o" size="18" />
+          <PaperIcon name="location" :size="18" />
         </div>
         <div class="location-row__main">
           <div class="location-row__name">{{ loc.name }}</div>
@@ -313,7 +314,7 @@ onMounted(load);
         <div class="parent-panel__title">选择父级位置</div>
         <van-cell title="根节点" clickable @click="pickParent(null)">
           <template #right-icon>
-            <van-icon v-if="form.parentId === null" name="success" color="var(--fs-primary)" />
+            <PaperIcon v-if="form.parentId === null" name="check" :size="18" />
           </template>
         </van-cell>
         <van-cell
@@ -324,7 +325,7 @@ onMounted(load);
           @click="pickParent(loc.id)"
         >
           <template #right-icon>
-            <van-icon v-if="form.parentId === loc.id" name="success" color="var(--fs-primary)" />
+            <PaperIcon v-if="form.parentId === loc.id" name="check" :size="18" />
           </template>
         </van-cell>
       </div>

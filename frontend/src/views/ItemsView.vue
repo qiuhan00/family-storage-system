@@ -10,6 +10,7 @@ import { categoriesApi } from '../api/categories';
 import { locationsApi, flattenLocations } from '../api/locations';
 import { settingsApi } from '../api/settings';
 import { expiryLevel } from '../utils/expiry';
+import PaperIcon from '../components/PaperIcon.vue';
 import type { FlatLocation } from '../api/locations';
 import type { Category, Item } from '../types';
 
@@ -153,9 +154,15 @@ onMounted(async () => {
       <van-search v-model="keyword" shape="round" placeholder="搜索物品名称" @search="onSearch" @clear="onSearch" />
       <div class="toolbar-actions">
         <van-badge :dot="filterActive">
-          <van-button size="small" icon="filter-o" type="primary" plain @click="showFilter = true">筛选</van-button>
+          <van-button size="small" type="primary" plain @click="showFilter = true">
+            <template #icon><PaperIcon name="filter" :size="14" /></template>
+            筛选
+          </van-button>
         </van-badge>
-        <van-button size="small" icon="plus" type="primary" @click="goCreate">新增</van-button>
+        <van-button size="small" type="primary" class="paper-sticker-btn" @click="goCreate">
+          <template #icon><PaperIcon name="plus" :size="14" /></template>
+          新增
+        </van-button>
       </div>
     </div>
 

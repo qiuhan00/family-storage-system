@@ -3,6 +3,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import NotificationBadge from '../components/NotificationBadge.vue';
+import PaperIcon from '../components/PaperIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -33,19 +34,12 @@ function goBack() {
 </script>
 
 <template>
-  <div class="layout-root">
+  <div class="layout-root paper-page">
     <van-nav-bar :title="pageTitle" fixed placeholder>
       <template #left>
-        <van-icon
-          v-if="showBack"
-          name="arrow-left"
-          size="20"
-          role="button"
-          tabindex="0"
-          aria-label="返回"
-          @click="goBack"
-          @keyup.enter="goBack"
-        />
+        <button v-if="showBack" type="button" class="icon-btn" aria-label="返回" @click="goBack">
+          <PaperIcon name="back" :size="20" />
+        </button>
       </template>
       <template #right>
         <NotificationBadge />
@@ -56,11 +50,23 @@ function goBack() {
       <router-view />
     </main>
 
-    <van-tabbar route fixed placeholder active-color="var(--fs-primary)">
-      <van-tabbar-item replace :to="{ name: 'home' }" icon="wap-home-o">首页</van-tabbar-item>
-      <van-tabbar-item replace to="/items" icon="apps-o">物品</van-tabbar-item>
-      <van-tabbar-item replace to="/shopping" icon="cart-o">购物</van-tabbar-item>
-      <van-tabbar-item replace to="/profile" icon="user-o">我的</van-tabbar-item>
+    <van-tabbar route fixed placeholder active-color="var(--ink)">
+      <van-tabbar-item replace :to="{ name: 'home' }">
+        <template #icon><PaperIcon name="home" :size="20" /></template>
+        首页
+      </van-tabbar-item>
+      <van-tabbar-item replace to="/items">
+        <template #icon><PaperIcon name="items" :size="20" /></template>
+        物品
+      </van-tabbar-item>
+      <van-tabbar-item replace to="/shopping">
+        <template #icon><PaperIcon name="cart" :size="20" /></template>
+        购物
+      </van-tabbar-item>
+      <van-tabbar-item replace to="/profile">
+        <template #icon><PaperIcon name="user" :size="20" /></template>
+        我的
+      </van-tabbar-item>
     </van-tabbar>
   </div>
 </template>
@@ -68,10 +74,23 @@ function goBack() {
 <style scoped>
 .layout-root {
   min-height: 100vh;
-  background: var(--fs-bg);
+  background: var(--paper);
 }
 .layout-content {
   /* NavBar(46px) 与 Tabbar(50px) 均已用 placeholder 占位，这里留一点底部呼吸空间 */
   min-height: calc(100vh - 46px - 50px);
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -12px;
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
 </style>

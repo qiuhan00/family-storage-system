@@ -3,6 +3,7 @@
 import { onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useNotificationStore } from '../store/notification';
+import PaperIcon from './PaperIcon.vue';
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -30,7 +31,7 @@ watch(() => route.fullPath, refresh);
 
 <template>
   <van-badge :content="notif.count" :max="99" :show-zero="false" class="notif-badge">
-    <van-icon name="bell" size="20" />
+    <PaperIcon name="bell" :size="20" label="通知" />
   </van-badge>
 </template>
 
