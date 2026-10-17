@@ -371,7 +371,7 @@ watch(itemId, (v) => {
 }
 
 .detail-head__expiry--red {
-  color: var(--terracotta);
+  color: var(--terracotta-ink);
   border-color: rgba(194, 96, 60, 0.5);
   font-weight: 600;
 }

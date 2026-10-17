@@ -1,5 +1,4 @@
 // src/main.ts —— 前端入口：挂载 App、Pinia、路由。
-import '@fontsource/noto-serif-sc/600.css';
 import '@fontsource/noto-serif-sc/700.css';
 import './styles/global.css';
 import './styles/paper.css';

@@ -308,7 +308,7 @@ onMounted(async () => {
 .item-card__name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 
 .item-card__meta {
@@ -335,7 +335,7 @@ onMounted(async () => {
 .item-card__qty {
   font-size: 18px;
   font-weight: 600;
-  color: var(--fs-text);
+  color: var(--ink);
 }
 
 .item-card__unit {
@@ -351,7 +351,7 @@ onMounted(async () => {
 }
 
 .item-card__expiry--red {
-  color: var(--terracotta);
+  color: var(--terracotta-ink);
   font-weight: 600;
 }
 

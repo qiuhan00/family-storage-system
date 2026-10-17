@@ -53,4 +53,18 @@ describe('paper design tokens', () => {
   it('ink3 is reserved for non-text (under 4.5:1)', () => {
     expect(contrast(designTokens.ink3, designTokens.paper)).toBeLessThan(4.5);
   });
+
+  it('accent text token meets 4.5:1 on paper, note and accent-soft', () => {
+    for (const bg of [
+      designTokens.paper,
+      designTokens.note,
+      designTokens.terracottaSoft,
+    ]) {
+      expect(contrast(designTokens.terracottaInk, bg)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('accent button label meets 4.5:1 on the accent fill', () => {
+    expect(contrast(designTokens.onAccent, designTokens.terracottaInk)).toBeGreaterThanOrEqual(4.5);
+  });
 });

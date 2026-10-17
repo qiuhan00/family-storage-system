@@ -125,9 +125,10 @@ onMounted(() => {
       </div>
       <van-empty v-else-if="expiringItems.length === 0" description="暂无临期物品" image-size="60" />
       <div v-else class="expiry-notes">
-        <div
+        <button
           v-for="item in expiringItems"
           :key="item.id"
+          type="button"
           class="expiry-note paper-note"
           @click="onItemTap(item)"
         >
@@ -135,7 +136,7 @@ onMounted(() => {
           <div class="expiry-note__meta">
             临期 {{ item.expiryDate }} · 余量 {{ item.quantity }}{{ item.unit }}
           </div>
-        </div>
+        </button>
       </div>
     </section>
 
@@ -242,7 +243,12 @@ onMounted(() => {
 }
 
 .expiry-note {
+  display: block;
+  width: 100%;
   padding: 12px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
   transform: rotate(-0.4deg);
 }
@@ -261,7 +267,7 @@ onMounted(() => {
 .expiry-note__meta {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--terracotta);
+  color: var(--terracotta-ink);
 }
 
 .dim-collapse {

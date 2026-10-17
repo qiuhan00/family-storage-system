@@ -10,8 +10,11 @@
   --ink-3: #8a8072; /* 仅非文本（边框/装饰），不得承载文字 */
   --terracotta: #c2603c;
   --terracotta-soft: #fbefe6;
+  --terracotta-ink: #a34a2b; /* 承载文字的陶土色（对纸底/便签/浅陶底 ≥4.5:1） */
+  --on-accent: #fff7ef;
   --moss: #6b7a4f;
   --moss-soft: #e9eedd;
+  --moss-ink: #4e5a3a;
   --amber: #c99a3b;
   --line: rgba(43, 38, 34, 0.14);
   --dashed: rgba(43, 38, 34, 0.35);

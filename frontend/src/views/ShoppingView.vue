@@ -431,7 +431,7 @@ onMounted(async () => {
 .shop-row__name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--fs-text);
+  color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -456,13 +456,13 @@ onMounted(async () => {
 }
 
 .shop-tag--pending {
-  color: var(--terracotta);
+  color: var(--terracotta-ink);
   background: var(--terracotta-soft);
   border-color: rgba(194, 96, 60, 0.5);
 }
 
 .shop-tag--bought {
-  color: #4e5a3a;
+  color: var(--moss-ink);
   background: var(--moss-soft);
   border-color: rgba(107, 122, 79, 0.5);
 }

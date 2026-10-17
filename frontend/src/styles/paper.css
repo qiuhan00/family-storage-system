@@ -44,13 +44,13 @@
 }
 
 .paper-chip--moss {
-  color: #4e5a3a;
+  color: var(--moss-ink);
   background: var(--moss-soft);
   border-color: rgba(107, 122, 79, 0.5);
 }
 
 .paper-chip--warning {
-  color: var(--terracotta);
+  color: var(--terracotta-ink);
   background: var(--terracotta-soft);
   border-color: rgba(194, 96, 60, 0.5);
 }
@@ -72,9 +72,9 @@
 }
 
 .paper-sticker-btn {
-  color: #fff7ef !important;
-  background: var(--terracotta) !important;
-  border-color: var(--terracotta) !important;
+  color: var(--on-accent) !important;
+  background: var(--terracotta-ink) !important;
+  border-color: var(--terracotta-ink) !important;
   border-radius: 2px !important;
 }
 
@@ -85,15 +85,15 @@
   border-radius: 2px !important;
 }
 
-/* 纸卡落下动效：配合内联 animation-delay 做错峰；reduced-motion 由 global.css 统一关闭 */
+/* 纸卡落下动效：用独立的 translate 属性，避免覆盖卡片自身的微旋转；reduced-motion 由 global.css 统一关闭 */
 @keyframes paper-drop {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    translate: 0 6px;
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    translate: 0 0;
   }
 }
 
@@ -102,10 +102,10 @@
 }
 
 /* ---------- Vant 皮肤覆盖 ---------- */
-/* Vant 的组件级变量（如 --van-button-primary-background）在 :root 上按默认主色解析，
-   ConfigProvider 只改 --van-primary-color 无法回灌到已解析的组件变量。
-   在 #app（更高特异性）重设组件变量，让整棵子树都拿到纸感配色。 */
-#app {
+/* 关键：Vant 的组件级变量（如 --van-button-primary-background）在 :root 上按默认主色解析。
+   必须用更高特异性（html:root）覆写源变量，才能让按钮、Radio、Calendar、Switch、Dialog
+   以及 teleport 到 body 的弹层都拿到纸感配色。 */
+html:root {
   --van-primary-color: #2b2622;
   --van-success-color: #6b7a4f;
   --van-warning-color: #c99a3b;
@@ -117,50 +117,71 @@
   --van-background-2: #fffdf8;
   --van-border-color: #e4ddce;
   --van-active-color: #2b2622;
+  --van-gray-6: #6e655a;
+  --van-field-placeholder-text-color: #6e655a;
+  --van-cell-value-color: #6e655a;
+  --van-cell-border-color: #e4ddce;
+  --van-empty-description-color: #6e655a;
+  --van-search-background: transparent;
+  --van-search-content-background: #fffdf8;
+  --van-popup-background: #fffdf8;
+  --van-dialog-background: #fffdf8;
   --van-button-primary-background: #2b2622;
   --van-button-primary-border-color: #2b2622;
   --van-button-primary-color: #f6f1e7;
   --van-button-danger-background: #a8391f;
   --van-button-danger-border-color: #a8391f;
   --van-button-danger-color: #fffdf8;
+  --van-radio-checked-icon-color: #2b2622;
+  --van-switch-on-background: #6b7a4f;
+  --van-calendar-selected-day-background: #2b2622;
+  --van-calendar-selected-day-color: #f6f1e7;
+  --van-dialog-confirm-button-text-color: #2b2622;
+  --van-dialog-cancel-button-text-color: #6e655a;
+  --van-stepper-background: #efe9dc;
+  --van-stepper-button-icon-color: #2b2622;
+  --van-tabs-bottom-bar-color: #2b2622;
+  --van-badge-background: #c2603c;
+  --van-badge-color: #fff7ef;
 }
 
-.van-nav-bar {
+/* 结构样式用 #app / body 前缀提高特异性，防止 Vant 懒加载分片后来居上 */
+#app .van-nav-bar {
   background: var(--paper);
   border-bottom: 1px solid var(--line);
 }
 
-.van-nav-bar__title {
+#app .van-nav-bar__title {
   font-family: var(--fs-font-display);
   font-weight: 700;
   color: var(--ink);
 }
 
-.van-nav-bar__text,
-.van-nav-bar .van-icon {
+#app .van-nav-bar__text,
+#app .van-nav-bar .van-icon {
   color: var(--ink);
 }
 
-.van-tabbar {
+#app .van-tabbar {
   background: var(--paper);
   border-top: 1px dashed var(--dashed);
 }
 
-.van-tabbar-item {
+#app .van-tabbar-item {
   color: var(--ink-2);
 }
 
-.van-tabbar-item--active {
+#app .van-tabbar-item--active {
   color: var(--ink);
   font-weight: 600;
 }
 
-.van-tabbar-item--active .van-tabbar-item__text {
+#app .van-tabbar-item--active .van-tabbar-item__text {
   padding-bottom: 1px;
   border-bottom: 1px dashed var(--terracotta);
 }
 
-.van-cell-group--inset {
+#app .van-cell-group--inset {
   margin: 0 12px 12px;
   background: var(--card);
   border: 1px solid var(--line);
@@ -169,62 +190,102 @@
   overflow: hidden;
 }
 
-.van-cell {
+#app .van-cell {
   background: transparent;
   color: var(--ink);
 }
 
-.van-cell::after {
+#app .van-cell::after {
+  border-style: dashed;
   border-color: var(--dashed);
 }
 
-.van-cell__label {
+#app .van-cell__label {
   color: var(--ink-2);
 }
 
-.van-field {
+#app .van-field {
   background: transparent;
 }
 
-.van-field__label {
+#app .van-field__label {
   color: var(--ink-2);
 }
 
-.van-field__control::placeholder {
+#app .van-field__control::placeholder,
+#app .van-field__control::-webkit-input-placeholder {
   color: var(--ink-2);
 }
 
-/* 纸感按钮统一近直角（覆盖 Vant 的 round 胶囊） */
-.van-button.van-button--round {
+#app .van-button,
+body .van-button {
   border-radius: 2px;
 }
 
-.van-button.van-button--primary:not(.van-button--plain) {
+#app .van-button.van-button--primary:not(.van-button--plain),
+body .van-button.van-button--primary:not(.van-button--plain) {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--paper);
 }
 
-.van-button.van-button--primary.van-button--plain {
+#app .van-button.van-button--primary.van-button--plain,
+body .van-button.van-button--primary.van-button--plain {
   background: transparent;
   border-color: var(--ink);
   color: var(--ink);
 }
 
-.van-button.van-button--danger:not(.van-button--plain) {
+#app .van-button.van-button--danger:not(.van-button--plain),
+body .van-button.van-button--danger:not(.van-button--plain) {
   background: var(--danger);
   border-color: var(--danger);
   color: #fffdf8;
 }
 
-.van-button.van-button--danger.van-button--plain {
+#app .van-button.van-button--danger.van-button--plain,
+body .van-button.van-button--danger.van-button--plain {
   background: transparent;
   border-color: var(--danger);
   color: var(--danger);
 }
 
-.van-popup,
-.van-dialog {
+/* 小按钮/步进器/开关：满足 ≥44px 触摸目标 */
+#app .van-button--small,
+#app .van-button--mini,
+body .van-button--small,
+body .van-button--mini {
+  min-height: 44px;
+}
+
+#app .van-stepper__minus,
+#app .van-stepper__plus,
+body .van-stepper__minus,
+body .van-stepper__plus {
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+#app .van-switch,
+body .van-switch {
+  position: relative;
+}
+
+#app .van-switch::before,
+body .van-switch::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+
+/* teleport 到 body 的弹层 */
+body .van-popup,
+body .van-dialog,
+body .van-calendar,
+body .van-picker,
+body .van-action-sheet {
   background: var(--card);
 }
 
@@ -238,30 +299,26 @@
   border-color: var(--ink);
 }
 
-.van-search {
+#app .van-search {
   background: transparent;
 }
 
-.van-search__content {
+#app .van-search__content,
+#app .van-search--round .van-search__content {
   background: var(--card);
   border: 1px dashed var(--dashed);
   border-radius: 2px;
 }
 
-.van-badge {
+#app .van-badge {
   background: var(--terracotta);
-  color: #fff7ef;
+  color: var(--on-accent);
 }
 
-.van-tabs__line {
+#app .van-tabs__line {
   background: var(--ink);
 }
 
-.van-picker,
-.van-calendar {
-  background: var(--card);
-}
-
-.van-loading {
+#app .van-loading {
   color: var(--ink);
 }
