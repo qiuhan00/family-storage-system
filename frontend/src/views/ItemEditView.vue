@@ -339,7 +339,11 @@ function onSubmit() {
 }
 
 .uploader-wrap {
-  padding: 0 16px 12px;
+  margin: 0 14px 12px;
+  padding: 10px;
+  background: var(--paper);
+  border: 1px dashed var(--dashed);
+  border-radius: 3px;
 }
 
 .form-footer {
@@ -348,5 +352,6 @@ function onSubmit() {
 
 .form-footer .van-button {
   height: 44px;
+  border-radius: 2px;
 }
 </style>
