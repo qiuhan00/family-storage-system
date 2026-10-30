@@ -1,0 +1,51 @@
+name: family-storage
+
+# 服务器部署用：直接使用已构建并 docker load 的镜像（不在服务器上编译）。
+# 本机构建：docker compose build  →  docker save -o images.tar family-storage-backend:latest family-storage-web:latest
+services:
+  db:
+    image: ${DOCKER_REGISTRY:-docker.io}/library/mysql:5.7
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      MYSQL_DATABASE: family_storage
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    image: family-storage-backend:latest
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: "jdbc:mysql://db:3306/family_storage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai"
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      UPLOAD_DIR: /app/uploads
+      # 小内存主机限制 JVM 堆，避免与 MySQL 争抢内存
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    image: family-storage-web:latest
+    ports:
+      - "18088:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads:
