@@ -67,7 +67,7 @@ class GlobalExceptionHandlerTest {
                 ItemServiceUpdateMethodHolder.class.getMethod("update", ItemRequest.class), 0);
         BeanPropertyBindingResult binding =
                 new BeanPropertyBindingResult(new ItemRequest("牛奶", 1L, 1L, 1, "盒",
-                        new BigDecimal("-1"), null, null, null, null), "itemRequest");
+                        new BigDecimal("-1"), null, null, null, null, null), "itemRequest");
         binding.addError(new FieldError("itemRequest", "purchasePrice",
                 new BigDecimal("-1"), false, null, null, "价格不能为负数"));
         MethodArgumentNotValidException ex = new MethodArgumentNotValidException(parameter, binding);

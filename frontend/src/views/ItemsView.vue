@@ -127,6 +127,12 @@ function locationPath(id: number): string {
   return flatLocations.value.find((l) => l.id === id)?.path ?? '';
 }
 
+/** 位置展示：顶层路径 + 具体位置（如「厨房 · 冰箱上层」）。 */
+function locationDisplay(id: number, detail: string | null): string {
+  const path = locationPath(id);
+  return detail ? `${path} · ${detail}` : path;
+}
+
 function goDetail(item: Item) {
   void router.push(`/items/${item.id}`);
 }
@@ -189,7 +195,7 @@ onMounted(async () => {
                   categoryName(item.categoryId)
                 }}</span>
                 <span v-if="locationPath(item.locationId)" class="paper-chip paper-chip--moss">{{
-                  locationPath(item.locationId)
+                  locationDisplay(item.locationId, item.locationDetail)
                 }}</span>
               </div>
               <div v-if="item.remark" class="item-card__remark">{{ item.remark }}</div>

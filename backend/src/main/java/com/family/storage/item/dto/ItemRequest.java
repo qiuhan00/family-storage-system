@@ -29,6 +29,7 @@ public record ItemRequest(
         LocalDate purchaseDate,
         LocalDate expiryDate,
         @Size(max = 255) String photoUrl,
-        @Size(max = 500) String remark
+        @Size(max = 500) String remark,
+        @Size(max = 200) String locationDetail
 ) {
 }

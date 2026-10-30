@@ -187,6 +187,7 @@ public class ItemService {
         item.setName(req.name());
         item.setCategoryId(req.categoryId());
         item.setLocationId(req.locationId());
+        item.setLocationDetail(req.locationDetail());
         item.setQuantity(req.quantity());
         item.setUnit(req.unit());
         item.setPurchasePrice(req.purchasePrice());
@@ -226,7 +227,7 @@ public class ItemService {
 
     private ItemResponse toResponse(Item i) {
         return new ItemResponse(i.getId(), i.getName(), i.getCategoryId(), i.getLocationId(),
-                i.getQuantity(), i.getUnit(), i.getPurchasePrice(), i.getPurchaseDate(),
+                i.getLocationDetail(), i.getQuantity(), i.getUnit(), i.getPurchasePrice(), i.getPurchaseDate(),
                 i.getExpiryDate(), i.getPhotoUrl(), i.getStatus().name(), i.getRemark(),
                 i.getCreatedBy(), i.getCreatedAt());
     }

@@ -12,7 +12,8 @@ import { apiErrorMessage } from '../api/http';
 import { itemsApi } from '../api/items';
 import { categoriesApi } from '../api/categories';
 import { filesApi, toFileDeleteName } from '../api/files';
-import type { Category, Item, ItemPayload } from '../types';
+import { locationsApi } from '../api/locations';
+import type { Category, Item, ItemPayload, Location } from '../types';
 
 const route = useRoute();
 const router = useRouter();
@@ -28,6 +29,8 @@ const form = reactive({
   categoryId: null as number | null,
   categoryName: '',
   locationId: null as number | null,
+  locationName: '',
+  locationDetail: '',
   quantity: '0',
   unit: '',
   purchasePrice: '',
@@ -51,6 +54,42 @@ function onCategoryConfirm(params: { selectedOptions: Array<{ text?: unknown; va
     form.categoryName = String(opt.text ?? '');
   }
   showCategoryPicker.value = false;
+}
+
+// --- 位置：顶层下拉 + 具体位置文本 ---
+const locationTree = ref<Location[]>([]);
+const showLocationPicker = ref(false);
+const locationColumns = computed(() =>
+  locationTree.value.map((n) => ({ text: n.name, value: n.id })),
+);
+
+/** 在子树中查找目标 id，返回从根的子级到目标的名称路径（不含根）。 */
+function findPathBelow(node: Location, targetId: number): string[] | null {
+  for (const child of node.children ?? []) {
+    if (child.id === targetId) return [child.name];
+    const sub = findPathBelow(child, targetId);
+    if (sub) return [child.name, ...sub];
+  }
+  return null;
+}
+
+/** 把物品位置解析为「顶层位置 + 具体子路径」；老数据挂在子位置时用于迁移回显。 */
+function resolveTop(targetId: number): { id: number; name: string; subPath: string[] } | null {
+  for (const root of locationTree.value) {
+    if (root.id === targetId) return { id: root.id, name: root.name, subPath: [] };
+    const sub = findPathBelow(root, targetId);
+    if (sub) return { id: root.id, name: root.name, subPath: sub };
+  }
+  return null;
+}
+
+function onLocationConfirm(params: { selectedOptions: Array<{ text?: unknown; value?: unknown }> }) {
+  const opt = params.selectedOptions[0];
+  if (opt && typeof opt.value === 'number') {
+    form.locationId = opt.value;
+    form.locationName = String(opt.text ?? '');
+  }
+  showLocationPicker.value = false;
 }
 
 // --- 日期选择 ---
@@ -138,8 +177,12 @@ const priceRule: FieldRule = {
 
 // --- 加载与回填 ---
 onMounted(async () => {
-  const cats = await categoriesApi.list().catch(() => [] as Category[]);
+  const [cats, tree] = await Promise.all([
+    categoriesApi.list().catch(() => [] as Category[]),
+    locationsApi.getTree().catch(() => [] as Location[]),
+  ]);
   categories.value = cats;
+  locationTree.value = tree;
   if (!isEdit.value) {
     loadingItem.value = false;
     return;
@@ -149,7 +192,11 @@ onMounted(async () => {
     form.name = it.name;
     form.categoryId = it.categoryId;
     form.categoryName = cats.find((c) => c.id === it.categoryId)?.name ?? '';
-    form.locationId = it.locationId;
+    const top = resolveTop(it.locationId);
+    form.locationId = top?.id ?? it.locationId;
+    form.locationName = top?.name ?? '';
+    form.locationDetail =
+      it.locationDetail ?? (top && top.subPath.length ? top.subPath.join(' / ') : '');
     form.quantity = String(it.quantity);
     form.unit = it.unit ?? '';
     form.purchasePrice = it.purchasePrice != null ? String(it.purchasePrice) : '';
@@ -176,6 +223,7 @@ function onSubmit() {
     name: form.name.trim(),
     categoryId: form.categoryId,
     locationId: form.locationId,
+    locationDetail: form.locationDetail.trim() || null,
     quantity: Number(form.quantity),
     unit: form.unit.trim() || null,
     purchasePrice: form.purchasePrice === '' ? null : Number(form.purchasePrice),
@@ -227,10 +275,22 @@ function onSubmit() {
           :rules="[{ required: true, message: '请选择分类' }]"
           @click="showCategoryPicker = true"
         />
-        <LocationPicker
-          v-model="form.locationId"
+        <van-field
+          v-model="form.locationName"
           name="locationId"
+          readonly
+          is-link
+          label="位置"
+          placeholder="请选择位置（如 厨房）"
           :rules="[{ required: true, message: '请选择位置' }]"
+          @click="showLocationPicker = true"
+        />
+        <van-field
+          v-model="form.locationDetail"
+          name="locationDetail"
+          label="具体位置"
+          placeholder="可选，如 冰箱上层"
+          :maxlength="200"
         />
       </van-cell-group>
 
@@ -319,6 +379,15 @@ function onSubmit() {
         :columns="categoryColumns"
         @confirm="onCategoryConfirm"
         @cancel="showCategoryPicker = false"
+      />
+    </van-popup>
+
+    <van-popup v-model:show="showLocationPicker" position="bottom" round>
+      <van-picker
+        title="选择位置"
+        :columns="locationColumns"
+        @confirm="onLocationConfirm"
+        @cancel="showLocationPicker = false"
       />
     </van-popup>
 

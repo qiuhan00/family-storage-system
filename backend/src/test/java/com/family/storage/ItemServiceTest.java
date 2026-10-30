@@ -49,7 +49,7 @@ class ItemServiceTest {
 
     private ItemRequest req(Long categoryId, Long locationId, int quantity) {
         return new ItemRequest("牛奶", categoryId, locationId, quantity, "盒",
-                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null);
+                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null, null);
     }
 
     private Item item() {
@@ -69,7 +69,7 @@ class ItemServiceTest {
     void createItemWithMissingCategoryThrows404() {
         when(categoryRepository.existsById(999L)).thenReturn(false);
         var req = new ItemRequest("牛奶", 999L, 1L, 3, "盒",
-                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null);
+                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null, null);
         assertThrows(ApiException.class, () -> svc().create(req, 1L));
     }
 
@@ -77,7 +77,7 @@ class ItemServiceTest {
     void quantityCannotBeNegative() {
         when(categoryRepository.existsById(1L)).thenReturn(true);
         when(locationRepository.existsById(1L)).thenReturn(true);
-        var req = new ItemRequest("可乐", 1L, 1L, -1, "瓶", null, null, null, null, null);
+        var req = new ItemRequest("可乐", 1L, 1L, -1, "瓶", null, null, null, null, null, null);
         ApiException ex = assertThrows(ApiException.class, () -> svc().create(req, 1L));
         assertEquals("NEGATIVE_QUANTITY", ex.getCode());
     }
@@ -104,6 +104,21 @@ class ItemServiceTest {
         assertEquals(ItemStatus.ACTIVE.name(), resp.status());
         assertEquals(7L, resp.createdBy());
         assertEquals(new BigDecimal("5.9"), resp.purchasePrice());
+    }
+
+    @Test
+    void createPersistsLocationDetailAndReturnsIt() {
+        when(categoryRepository.existsById(1L)).thenReturn(true);
+        when(locationRepository.existsById(1L)).thenReturn(true);
+        when(itemRepository.save(any(Item.class))).thenAnswer(inv -> {
+            Item i = inv.getArgument(0);
+            i.setId(9L);
+            return i;
+        });
+        var req = new ItemRequest("牛奶", 1L, 1L, 3, "盒",
+                new BigDecimal("5.9"), null, null, null, null, "冰箱上层");
+        ItemResponse resp = svc().create(req, 7L);
+        assertEquals("冰箱上层", resp.locationDetail());
     }
 
     @Test

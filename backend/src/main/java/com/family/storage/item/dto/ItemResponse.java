@@ -12,6 +12,7 @@ public record ItemResponse(
         String name,
         Long categoryId,
         Long locationId,
+        String locationDetail,
         int quantity,
         String unit,
         BigDecimal purchasePrice,

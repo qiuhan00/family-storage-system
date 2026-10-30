@@ -43,6 +43,10 @@ public class Item {
     @Column(name = "location_id", nullable = false)
     private Long locationId;
 
+    /** 具体位置描述（如「冰箱上层」）；与顶层位置组合展示为「厨房 · 冰箱上层」。 */
+    @Column(name = "location_detail", length = 200)
+    private String locationDetail;
+
     @Column(nullable = false)
     private int quantity;
 
@@ -126,6 +130,14 @@ public class Item {
 
     public void setLocationId(Long locationId) {
         this.locationId = locationId;
+    }
+
+    public String getLocationDetail() {
+        return locationDetail;
+    }
+
+    public void setLocationDetail(String locationDetail) {
+        this.locationDetail = locationDetail;
     }
 
     public int getQuantity() {

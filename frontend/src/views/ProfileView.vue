@@ -99,6 +99,7 @@ onMounted(async () => {
 
     <van-cell-group inset class="profile-group">
       <van-cell title="修改密码" is-link @click="openPassword" />
+      <van-cell title="分类管理" label="新增 / 重命名 / 排序（删除仅管理员）" is-link to="/categories" />
       <van-cell title="位置管理" label="新增位置 / 填写说明与照片" is-link to="/locations" />
     </van-cell-group>
 

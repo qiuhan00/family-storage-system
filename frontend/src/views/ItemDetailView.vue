@@ -43,6 +43,12 @@ function locationPath(id: number): string {
   return flatLocations.value.find((l) => l.id === id)?.path ?? '';
 }
 
+/** 位置展示：顶层路径 + 具体位置（如「厨房 · 冰箱上层」）。 */
+function locationDisplay(id: number, detail: string | null): string {
+  const path = locationPath(id);
+  return detail ? `${path} · ${detail}` : path;
+}
+
 const statusLabel: Record<string, string> = { ACTIVE: '在库', ARCHIVED: '已归档' };
 
 async function loadAll() {
@@ -235,7 +241,7 @@ watch(itemId, (v) => {
         </div>
         <div class="detail-field">
           <span class="detail-field__label">位置</span>
-          <span class="detail-field__value">{{ locationPath(item.locationId) }}</span>
+          <span class="detail-field__value">{{ locationDisplay(item.locationId, item.locationDetail) }}</span>
         </div>
         <div class="detail-field">
           <span class="detail-field__label">购买日期</span>

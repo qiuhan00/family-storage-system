@@ -61,6 +61,7 @@ export interface Item {
   name: string;
   categoryId: number;
   locationId: number;
+  locationDetail: string | null;
   quantity: number;
   unit: string;
   purchasePrice: number;
@@ -168,6 +169,7 @@ export interface ItemPayload {
   name: string;
   categoryId: number;
   locationId: number;
+  locationDetail: string | null;
   quantity: number;
   unit: string | null;
   purchasePrice: number | null;
