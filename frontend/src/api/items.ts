@@ -51,6 +51,10 @@ export const itemsApi = {
   expiring(days = 7) {
     return http.get<Item[]>('/items/expiring', { params: { days } }).then((r) => r.data);
   },
+  /** GET /api/items/low-stock → 已设阈值且数量低于阈值的物品（首页低库存提醒）。 */
+  lowStock() {
+    return http.get<Item[]>('/items/low-stock').then((r) => r.data);
+  },
   /** GET /api/items/{id} → 物品详情。 */
   getItem(id: number) {
     return http.get<Item>(`/items/${id}`).then((r) => r.data);

@@ -36,6 +36,16 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByStatusAndExpiryDateBetweenOrderByExpiryDateAsc(ItemStatus status,
                                                                     LocalDate from, LocalDate to);
 
+    /** 已设置低库存阈值且当前数量低于阈值的物品（首页低库存提醒）。 */
+    @Query("""
+            select i from Item i
+            where i.status = :status
+              and i.lowStockThreshold is not null
+              and i.quantity < i.lowStockThreshold
+            order by i.quantity asc
+            """)
+    List<Item> findLowStock(@Param("status") ItemStatus status);
+
     // ---- Task 9 统计聚合（spec §5.8）：全部仅统计 ACTIVE 物品 ----
 
     /** ACTIVE 物品总数。 */

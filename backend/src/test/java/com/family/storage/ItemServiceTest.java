@@ -49,7 +49,7 @@ class ItemServiceTest {
 
     private ItemRequest req(Long categoryId, Long locationId, int quantity) {
         return new ItemRequest("牛奶", categoryId, locationId, quantity, "盒",
-                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null, null);
+                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null, null, null);
     }
 
     private Item item() {
@@ -69,7 +69,7 @@ class ItemServiceTest {
     void createItemWithMissingCategoryThrows404() {
         when(categoryRepository.existsById(999L)).thenReturn(false);
         var req = new ItemRequest("牛奶", 999L, 1L, 3, "盒",
-                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null, null);
+                new BigDecimal("5.9"), LocalDate.now(), LocalDate.now().plusDays(20), null, null, null, null);
         assertThrows(ApiException.class, () -> svc().create(req, 1L));
     }
 
@@ -77,7 +77,7 @@ class ItemServiceTest {
     void quantityCannotBeNegative() {
         when(categoryRepository.existsById(1L)).thenReturn(true);
         when(locationRepository.existsById(1L)).thenReturn(true);
-        var req = new ItemRequest("可乐", 1L, 1L, -1, "瓶", null, null, null, null, null, null);
+        var req = new ItemRequest("可乐", 1L, 1L, -1, "瓶", null, null, null, null, null, null, null);
         ApiException ex = assertThrows(ApiException.class, () -> svc().create(req, 1L));
         assertEquals("NEGATIVE_QUANTITY", ex.getCode());
     }
@@ -116,9 +116,35 @@ class ItemServiceTest {
             return i;
         });
         var req = new ItemRequest("牛奶", 1L, 1L, 3, "盒",
-                new BigDecimal("5.9"), null, null, null, null, "冰箱上层");
+                new BigDecimal("5.9"), null, null, null, null, "冰箱上层", null);
         ItemResponse resp = svc().create(req, 7L);
         assertEquals("冰箱上层", resp.locationDetail());
+    }
+
+    @Test
+    void createPersistsLowStockThresholdAndReturnsIt() {
+        when(categoryRepository.existsById(1L)).thenReturn(true);
+        when(locationRepository.existsById(1L)).thenReturn(true);
+        when(itemRepository.save(any(Item.class))).thenAnswer(inv -> {
+            Item i = inv.getArgument(0);
+            i.setId(10L);
+            return i;
+        });
+        var req = new ItemRequest("牛奶", 1L, 1L, 1, "盒",
+                new BigDecimal("5.9"), null, null, null, null, null, 5);
+        ItemResponse resp = svc().create(req, 7L);
+        assertEquals(5, resp.lowStockThreshold());
+    }
+
+    @Test
+    void lowStockListQueriesActiveItems() {
+        Item low = item();
+        low.setQuantity(1);
+        low.setLowStockThreshold(3);
+        when(itemRepository.findLowStock(ItemStatus.ACTIVE)).thenReturn(List.of(low));
+        List<ItemResponse> result = svc().lowStockList();
+        assertEquals(1, result.size());
+        assertEquals(3, result.get(0).lowStockThreshold());
     }
 
     @Test

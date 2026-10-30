@@ -79,6 +79,11 @@ public class ItemService {
                 .stream().map(this::toResponse).toList();
     }
 
+    /** 低库存提醒：已设置阈值且当前数量低于阈值的 ACTIVE 物品（数量升序）。 */
+    public List<ItemResponse> lowStockList() {
+        return itemRepository.findLowStock(ItemStatus.ACTIVE).stream().map(this::toResponse).toList();
+    }
+
     /** 临期阈值（天）：app_settings.expiry.remind.days，缺失回退默认 7——全系统唯一临期口径。 */
     private int remindDays() {
         return settingsService.getInt(SettingsService.EXPIRY_REMIND_DAYS,
@@ -188,6 +193,7 @@ public class ItemService {
         item.setCategoryId(req.categoryId());
         item.setLocationId(req.locationId());
         item.setLocationDetail(req.locationDetail());
+        item.setLowStockThreshold(req.lowStockThreshold());
         item.setQuantity(req.quantity());
         item.setUnit(req.unit());
         item.setPurchasePrice(req.purchasePrice());
@@ -227,7 +233,8 @@ public class ItemService {
 
     private ItemResponse toResponse(Item i) {
         return new ItemResponse(i.getId(), i.getName(), i.getCategoryId(), i.getLocationId(),
-                i.getLocationDetail(), i.getQuantity(), i.getUnit(), i.getPurchasePrice(), i.getPurchaseDate(),
+                i.getLocationDetail(), i.getLowStockThreshold(), i.getQuantity(), i.getUnit(),
+                i.getPurchasePrice(), i.getPurchaseDate(),
                 i.getExpiryDate(), i.getPhotoUrl(), i.getStatus().name(), i.getRemark(),
                 i.getCreatedBy(), i.getCreatedAt());
     }

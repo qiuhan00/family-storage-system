@@ -31,6 +31,7 @@ const form = reactive({
   locationId: null as number | null,
   locationName: '',
   locationDetail: '',
+  lowStockThreshold: '',
   quantity: '0',
   unit: '',
   purchasePrice: '',
@@ -197,6 +198,7 @@ onMounted(async () => {
     form.locationName = top?.name ?? '';
     form.locationDetail =
       it.locationDetail ?? (top && top.subPath.length ? top.subPath.join(' / ') : '');
+    form.lowStockThreshold = it.lowStockThreshold != null ? String(it.lowStockThreshold) : '';
     form.quantity = String(it.quantity);
     form.unit = it.unit ?? '';
     form.purchasePrice = it.purchasePrice != null ? String(it.purchasePrice) : '';
@@ -224,6 +226,8 @@ function onSubmit() {
     categoryId: form.categoryId,
     locationId: form.locationId,
     locationDetail: form.locationDetail.trim() || null,
+    lowStockThreshold:
+      form.lowStockThreshold.trim() === '' ? null : Number(form.lowStockThreshold),
     quantity: Number(form.quantity),
     unit: form.unit.trim() || null,
     purchasePrice: form.purchasePrice === '' ? null : Number(form.purchasePrice),
@@ -311,6 +315,13 @@ function onSubmit() {
           label="单价（元）"
           placeholder="可选"
           :rules="[priceRule]"
+        />
+        <van-field
+          v-model="form.lowStockThreshold"
+          name="lowStockThreshold"
+          type="digit"
+          label="低库存提醒"
+          placeholder="低于该数量时首页提醒（留空不提醒）"
         />
         <van-field
           v-model="form.purchaseDate"

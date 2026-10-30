@@ -62,6 +62,7 @@ export interface Item {
   categoryId: number;
   locationId: number;
   locationDetail: string | null;
+  lowStockThreshold: number | null;
   quantity: number;
   unit: string;
   purchasePrice: number;
@@ -170,6 +171,7 @@ export interface ItemPayload {
   categoryId: number;
   locationId: number;
   locationDetail: string | null;
+  lowStockThreshold: number | null;
   quantity: number;
   unit: string | null;
   purchasePrice: number | null;

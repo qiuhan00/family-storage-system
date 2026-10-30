@@ -255,6 +255,10 @@ watch(itemId, (v) => {
           <span class="detail-field__label">备注</span>
           <span class="detail-field__value">{{ item.remark }}</span>
         </div>
+        <div v-if="item.lowStockThreshold != null" class="detail-field detail-field--full">
+          <span class="detail-field__label">低库存提醒</span>
+          <span class="detail-field__value">低于 {{ item.lowStockThreshold }} 时提醒</span>
+        </div>
       </div>
 
       <div class="detail-section">

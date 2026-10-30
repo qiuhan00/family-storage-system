@@ -47,6 +47,10 @@ public class Item {
     @Column(name = "location_detail", length = 200)
     private String locationDetail;
 
+    /** 低库存提醒阈值：quantity 低于该值时首页提醒；null 表示不提醒。 */
+    @Column(name = "low_stock_threshold")
+    private Integer lowStockThreshold;
+
     @Column(nullable = false)
     private int quantity;
 
@@ -138,6 +142,14 @@ public class Item {
 
     public void setLocationDetail(String locationDetail) {
         this.locationDetail = locationDetail;
+    }
+
+    public Integer getLowStockThreshold() {
+        return lowStockThreshold;
+    }
+
+    public void setLowStockThreshold(Integer lowStockThreshold) {
+        this.lowStockThreshold = lowStockThreshold;
     }
 
     public int getQuantity() {

@@ -46,6 +46,11 @@ public class ItemController {
         return itemService.expiringList(days);
     }
 
+    @GetMapping("/low-stock")
+    public List<ItemResponse> lowStock() {
+        return itemService.lowStockList();
+    }
+
     @GetMapping("/{id}")
     public ItemResponse get(@PathVariable Long id) {
         return itemService.get(id);

@@ -17,12 +17,14 @@ const remindDays = ref(7);
 
 const summary = ref<Summary | null>(null);
 const expiringItems = ref<Item[]>([]);
+const lowStockItems = ref<Item[]>([]);
 const byCategory = ref<ItemCountByDimension[]>([]);
 const byLocation = ref<ItemCountByDimension[]>([]);
 const loadingSummary = ref(true);
 const loadingExpiring = ref(true);
+const loadingLowStock = ref(true);
 const loadingDims = ref(true);
-const activeDim = ref<string[]>(['category']);
+const activeDim = ref<string[]>([]);
 
 const statCards = computed(() => {
   const s = summary.value;
@@ -64,8 +66,18 @@ async function loadExpiring() {
   }
 }
 
-async function loadDimensions() {
-  loadingDims.value = true;
+async function loadLowStock() {
+  loadingLowStock.value = true;
+  try {
+    lowStockItems.value = await itemsApi.lowStock();
+  } catch {
+    showToast('库存不足提醒加载失败，请稍后重试');
+  } finally {
+    loadingLowStock.value = false;
+  }
+}
+
+async function loadDimensions() {  loadingDims.value = true;
   try {
     const [category, location] = await Promise.all([
       statisticsApi.byCategory(),
@@ -88,6 +100,7 @@ function onItemTap(item: Item) {
 onMounted(() => {
   void loadSummary();
   void loadExpiring();
+  void loadLowStock();
   void loadDimensions();
 });
 </script>
@@ -135,6 +148,33 @@ onMounted(() => {
           <div class="expiry-note__name">{{ item.name }}</div>
           <div class="expiry-note__meta">
             临期 {{ item.expiryDate }} · 余量 {{ item.quantity }}{{ item.unit }}
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- 库存不足提醒 -->
+    <section class="home-section">
+      <h2 class="section-title paper-section-title">库存不足提醒</h2>
+      <div v-if="loadingLowStock" class="block-loading">
+        <van-loading size="24">加载中…</van-loading>
+      </div>
+      <van-empty
+        v-else-if="lowStockItems.length === 0"
+        description="暂无库存不足物品"
+        image-size="60"
+      />
+      <div v-else class="lowstock-notes">
+        <button
+          v-for="item in lowStockItems"
+          :key="item.id"
+          type="button"
+          class="lowstock-note paper-card"
+          @click="onItemTap(item)"
+        >
+          <div class="lowstock-note__name">{{ item.name }}</div>
+          <div class="lowstock-note__meta">
+            仅剩 {{ item.quantity }}{{ item.unit }} · 低于 {{ item.lowStockThreshold }} 提醒
           </div>
         </button>
       </div>
@@ -268,6 +308,37 @@ onMounted(() => {
   margin-top: 4px;
   font-size: 12px;
   color: var(--terracotta-ink);
+}
+
+.lowstock-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 12px;
+}
+
+.lowstock-note {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-left: 3px solid var(--danger);
+}
+
+.lowstock-note__name {
+  font-family: var(--fs-font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.lowstock-note__meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--danger);
 }
 
 .dim-collapse {
