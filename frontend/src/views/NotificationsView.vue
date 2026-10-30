@@ -73,16 +73,10 @@ function switchFilter(f: Filter) {
   reload();
 }
 
-function typeLabel(type: Notification['type']): string {
-  if (type === 'EXPIRY') return '临期';
-  if (type === 'LOW_STOCK') return '库存不足';
-  return '其他';
-}
-
 function typeClass(type: Notification['type']): string {
-  if (type === 'EXPIRY') return 'notif-type--expiry';
-  if (type === 'LOW_STOCK') return 'notif-type--low';
-  return 'notif-type--other';
+  if (type === 'EXPIRY') return 'notif-row--expiry';
+  if (type === 'LOW_STOCK') return 'notif-row--low';
+  return 'notif-row--other';
 }
 
 function fmtTime(value: string): string {
@@ -164,14 +158,18 @@ onMounted(reload);
             :key="n.id"
             type="button"
             class="notif-row paper-card"
-            :class="{ 'notif-row--unread': !n.readFlag }"
+            :class="[typeClass(n.type), { 'notif-row--unread': !n.readFlag }]"
             @click="open(n)"
           >
-            <span class="paper-chip notif-type" :class="typeClass(n.type)">{{ typeLabel(n.type) }}</span>
+            <span class="notif-row__dotcol">
+              <span
+                class="notif-dot"
+                :class="{ 'notif-dot--hidden': n.readFlag }"
+                aria-hidden="true"
+              ></span>
+            </span>
             <span class="notif-row__main">
-              <span class="notif-row__title">
-                <span v-if="!n.readFlag" class="notif-dot" aria-label="未读"></span>{{ n.title }}
-              </span>
+              <span class="notif-row__title">{{ n.title }}</span>
               <span class="notif-row__body">{{ n.body }}</span>
               <span class="notif-row__time">{{ fmtTime(n.createdAt) }}</span>
             </span>
@@ -222,9 +220,9 @@ onMounted(reload);
   padding: 4px 12px 12px;
 }
 
-.notif-row {
-  display: flex;
-  align-items: flex-start;
+button.notif-row {
+  display: grid;
+  grid-template-columns: 8px 1fr;
   gap: 10px;
   width: 100%;
   margin-bottom: 10px;
@@ -233,31 +231,29 @@ onMounted(reload);
   color: inherit;
   text-align: left;
   cursor: pointer;
+  border-left: 3px solid var(--line);
 }
 
-.notif-row--unread {
-  border-left: 3px solid var(--terracotta);
+/* 用行底色区分类型（临期=便签黄，库存不足=浅砖红） */
+button.notif-row.notif-row--expiry {
+  background: var(--note);
+  border-left-color: var(--terracotta);
 }
 
-.notif-type {
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-
-.notif-type--expiry {
-  color: var(--terracotta-ink);
-  background: var(--terracotta-soft);
-  border-color: rgba(194, 96, 60, 0.5);
-}
-
-.notif-type--low {
-  color: var(--danger);
+button.notif-row.notif-row--low {
   background: var(--danger-soft);
-  border-color: rgba(168, 57, 31, 0.5);
+  border-left-color: var(--danger);
 }
 
-.notif-type--other {
-  color: var(--ink-2);
+button.notif-row.notif-row--other {
+  background: var(--card);
+  border-left-color: var(--line);
+}
+
+.notif-row__dotcol {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
 }
 
 .notif-row__main {
@@ -268,12 +264,13 @@ onMounted(reload);
 }
 
 .notif-row__title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
+}
+
+.notif-row--unread .notif-row__title {
+  font-weight: 700;
 }
 
 .notif-dot {
@@ -281,6 +278,10 @@ onMounted(reload);
   height: 6px;
   background: var(--terracotta);
   border-radius: 50%;
+}
+
+.notif-dot--hidden {
+  visibility: hidden;
 }
 
 .notif-row__body {
