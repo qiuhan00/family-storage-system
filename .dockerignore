@@ -1,0 +1,13 @@
+.git
+.gitignore
+.superpowers
+.playwright-mcp
+**/node_modules
+frontend/dist
+backend/target
+uploads
+backend/uploads
+*.log
+docs
+.env
+.env.*
