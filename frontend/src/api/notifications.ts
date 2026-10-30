@@ -1,9 +1,10 @@
 // src/api/notifications.ts —— 站内通知接口封装（spec §5.7：列表/未读/已读）。
 import { http } from './http';
-import type { Notification, PageResponse, UnreadCountResponse } from '../types';
+import type { Notification, NotificationType, PageResponse, UnreadCountResponse } from '../types';
 
 export interface NotificationQuery {
   unread?: boolean;
+  type?: NotificationType;
   page?: number;
   size?: number;
 }
@@ -19,6 +20,7 @@ export const notificationsApi = {
       .get<PageResponse<Notification>>('/notifications', {
         params: {
           ...(params.unread ? { unread: true } : {}),
+          ...(params.type ? { type: params.type } : {}),
           page: params.page ?? 0,
           size: params.size ?? 20,
         },

@@ -20,14 +20,11 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
 
-    public Page<Notification> list(Long userId, Boolean unread, Pageable pageable) {
+    public Page<Notification> list(Long userId, Boolean unread, NotificationType type, Pageable pageable) {
         Pageable sorted = pageable.getSort().isSorted() ? pageable
                 : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                         Sort.by(Sort.Direction.DESC, "createdAt"));
-        if (Boolean.TRUE.equals(unread)) {
-            return notificationRepository.findByUserIdAndReadFlagFalseOrderByCreatedAtDesc(userId, sorted);
-        }
-        return notificationRepository.findByUserId(userId, sorted);
+        return notificationRepository.search(userId, Boolean.TRUE.equals(unread), type, sorted);
     }
 
     public long unreadCount(Long userId) {

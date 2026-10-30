@@ -16,7 +16,13 @@ const PAGE_SIZE = 20;
 const router = useRouter();
 const notifStore = useNotificationStore();
 
-type Filter = 'all' | 'unread';
+type Filter = 'all' | 'unread' | 'EXPIRY' | 'LOW_STOCK';
+const FILTERS: Array<{ value: Filter; label: string }> = [
+  { value: 'all', label: '全部' },
+  { value: 'unread', label: '未读' },
+  { value: 'EXPIRY', label: '临期' },
+  { value: 'LOW_STOCK', label: '库存不足' },
+];
 const filter = ref<Filter>('all');
 
 const items = ref<Notification[]>([]);
@@ -30,6 +36,7 @@ async function fetchPage(p: number) {
   try {
     const data = await notificationsApi.list({
       unread: filter.value === 'unread' ? true : undefined,
+      type: filter.value === 'EXPIRY' || filter.value === 'LOW_STOCK' ? filter.value : undefined,
       page: p,
       size: PAGE_SIZE,
     });
@@ -125,20 +132,14 @@ onMounted(reload);
     <div class="notif-toolbar">
       <div class="notif-tabs">
         <button
+          v-for="f in FILTERS"
+          :key="f.value"
           type="button"
           class="notif-tab"
-          :class="{ 'notif-tab--active': filter === 'all' }"
-          @click="switchFilter('all')"
+          :class="{ 'notif-tab--active': filter === f.value }"
+          @click="switchFilter(f.value)"
         >
-          全部
-        </button>
-        <button
-          type="button"
-          class="notif-tab"
-          :class="{ 'notif-tab--active': filter === 'unread' }"
-          @click="switchFilter('unread')"
-        >
-          未读
+          {{ f.label }}
         </button>
       </div>
       <van-button size="small" plain type="primary" @click="readAll">全部已读</van-button>
@@ -196,6 +197,7 @@ onMounted(reload);
 
 .notif-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 

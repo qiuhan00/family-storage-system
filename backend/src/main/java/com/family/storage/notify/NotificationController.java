@@ -25,8 +25,9 @@ public class NotificationController {
     @GetMapping
     public PageResponse<Notification> list(@AuthenticationPrincipal Long userId,
                                            @RequestParam(required = false) Boolean unread,
+                                           @RequestParam(required = false) NotificationType type,
                                            Pageable pageable) {
-        return PageResponse.of(notificationService.list(userId, unread, pageable));
+        return PageResponse.of(notificationService.list(userId, unread, type, pageable));
     }
 
     @GetMapping("/unread-count")
