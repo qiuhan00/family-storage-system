@@ -1,7 +1,7 @@
 <!-- src/components/NotificationBadge.vue —— NavBar 右侧未读通知角标：每 60s 轮询 + 路由变更刷新。 -->
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useNotificationStore } from '../store/notification';
 import PaperIcon from './PaperIcon.vue';
 
@@ -9,7 +9,12 @@ const POLL_INTERVAL_MS = 60_000;
 
 const notif = useNotificationStore();
 const route = useRoute();
+const router = useRouter();
 let timer: number | undefined;
+
+function goNotifications() {
+  void router.push('/notifications');
+}
 
 /** 拉取一次未读数（失败由 store 静默兜底）。 */
 function refresh() {
@@ -31,12 +36,27 @@ watch(() => route.fullPath, refresh);
 
 <template>
   <van-badge :content="notif.count" :max="99" :show-zero="false" class="notif-badge">
-    <PaperIcon name="bell" :size="20" label="通知" />
+    <button type="button" class="notif-btn" aria-label="通知中心" @click="goNotifications">
+      <PaperIcon name="bell" :size="20" />
+    </button>
   </van-badge>
 </template>
 
 <style scoped>
 .notif-badge {
+  cursor: pointer;
+}
+.notif-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
   cursor: pointer;
 }
 </style>

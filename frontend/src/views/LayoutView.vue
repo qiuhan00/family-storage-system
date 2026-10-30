@@ -20,6 +20,7 @@ const titles: Record<string, string> = {
   settings: '应用设置',
   locations: '位置管理',
   categories: '分类管理',
+  notifications: '通知中心',
 };
 
 const pageTitle = computed(() => titles[String(route.name)] ?? '家庭收纳');

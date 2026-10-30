@@ -122,7 +122,7 @@ export interface ShoppingItem {
 }
 
 /** 通知类型。 */
-export type NotificationType = 'EXPIRY' | 'OTHER';
+export type NotificationType = 'EXPIRY' | 'LOW_STOCK' | 'OTHER';
 
 /** 站内通知（spec §5.7）。 */
 export interface Notification {
