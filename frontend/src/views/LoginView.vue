@@ -12,6 +12,8 @@ const auth = useAuthStore();
 
 const form = reactive({ username: '', password: '' });
 const loading = ref(false);
+/** 7 天免密登录：勾选则 token 持久化到 localStorage，不勾选仅本次会话（sessionStorage）。 */
+const remember = ref(false);
 
 const rules = {
   username: [{ required: true, message: '请输入用户名' }],
@@ -21,10 +23,13 @@ const rules = {
 const onSubmit = async () => {
   loading.value = true;
   try {
-    await auth.login({
-      username: form.username.trim(),
-      password: form.password,
-    });
+    await auth.login(
+      {
+        username: form.username.trim(),
+        password: form.password,
+      },
+      remember.value,
+    );
     await router.replace('/');
   } catch (err) {
     const body = (err as { response?: { data?: ApiErrorBody } }).response?.data;
@@ -66,6 +71,10 @@ const goRegister = () => router.push('/register');
         />
       </van-cell-group>
 
+      <div class="auth-remember">
+        <van-checkbox v-model="remember" shape="square" icon-size="16">7 天内免密登录</van-checkbox>
+      </div>
+
       <div class="auth-actions">
         <van-button round block type="primary" native-type="submit" :loading="loading" loading-text="登录中...">
           登录
@@ -106,6 +115,13 @@ const goRegister = () => router.push('/register');
 }
 .auth-actions {
   margin: 24px 16px 0;
+}
+.auth-remember {
+  margin: 12px 16px 0;
+}
+.auth-remember :deep(.van-checkbox__label) {
+  font-size: 13px;
+  color: var(--ink-2);
 }
 .auth-register {
   margin-top: 12px;

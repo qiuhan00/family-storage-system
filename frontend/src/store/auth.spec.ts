@@ -18,6 +18,19 @@ const localStorageMock = {
   },
 };
 
+// sessionStorage mock（免密登录未勾选时使用）
+const sessionStore = new Map<string, string>();
+const sessionStorageMock = {
+  getItem: (k: string) => sessionStore.get(k) ?? null,
+  setItem: (k: string, v: string) => void sessionStore.set(k, v),
+  removeItem: (k: string) => void sessionStore.delete(k),
+  clear: () => sessionStore.clear(),
+  key: (i: number) => Array.from(sessionStore.keys())[i] ?? null,
+  get length() {
+    return sessionStore.size;
+  },
+};
+
 vi.mock('../api/auth', () => ({
   authApi: {
     login: vi.fn(),
@@ -29,7 +42,9 @@ vi.mock('../api/auth', () => ({
 
 beforeEach(() => {
   vi.stubGlobal('localStorage', localStorageMock);
+  vi.stubGlobal('sessionStorage', sessionStorageMock);
   memStore.clear();
+  sessionStore.clear();
   setActivePinia(createPinia());
 });
 
@@ -57,6 +72,32 @@ describe('auth token helpers', () => {
     setToken('abc');
     expect(localStorage.getItem(tokenKey)).toBe('abc');
   });
+
+  it('setToken(false) stores in sessionStorage only', () => {
+    setToken('sess', false);
+    expect(sessionStorage.getItem(tokenKey)).toBe('sess');
+    expect(localStorage.getItem(tokenKey)).toBeNull();
+  });
+
+  it('setToken(true) stores in localStorage and clears session token', () => {
+    setToken('sess', false);
+    setToken('persist', true);
+    expect(localStorage.getItem(tokenKey)).toBe('persist');
+    expect(sessionStorage.getItem(tokenKey)).toBeNull();
+  });
+
+  it('restoreToken falls back to sessionStorage', () => {
+    sessionStorage.setItem(tokenKey, 'sess');
+    expect(restoreToken()).toBe('sess');
+  });
+
+  it('clearToken removes both storages', () => {
+    localStorage.setItem(tokenKey, 'a');
+    sessionStorage.setItem(tokenKey, 'b');
+    clearToken();
+    expect(localStorage.getItem(tokenKey)).toBeNull();
+    expect(sessionStorage.getItem(tokenKey)).toBeNull();
+  });
 });
 
 describe('useAuthStore', () => {
@@ -82,6 +123,21 @@ describe('useAuthStore', () => {
     expect(store.user?.username).toBe('alice');
     expect(store.user?.role).toBe('ADMIN');
     expect(restoreToken()).toBe('jwt-x');
+  });
+
+  it('login with remember=false stores session token only', async () => {
+    const authResponse = {
+      token: 'jwt-s',
+      user: { id: 1, username: 'alice', displayName: 'Alice', role: 'ADMIN' as const, enabled: true },
+    };
+    vi.mocked(authApi.login).mockResolvedValue(authResponse);
+
+    const store = useAuthStore();
+    await store.login({ username: 'alice', password: 'secret' }, false);
+
+    expect(sessionStorage.getItem(tokenKey)).toBe('jwt-s');
+    expect(localStorage.getItem(tokenKey)).toBeNull();
+    expect(restoreToken()).toBe('jwt-s');
   });
 
   it('login failure keeps token null and nothing persisted', async () => {
